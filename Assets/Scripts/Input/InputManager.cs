@@ -10,9 +10,8 @@ public class InputManager : MonoBehaviour
 
     [Header("Hit Settings")]
     public Transform hitLine;
-    public float hitTolerance = 0.5f; // world units
+    public float hitTolerance = 0.5f;
 
-    // Track hold state per lane
     private bool[] laneHolding;
 
     private void Awake()
@@ -24,14 +23,16 @@ public class InputManager : MonoBehaviour
     {
         for (int lane = 0; lane < laneKeys.Length; lane++)
         {
-            // Key pressed
             if (Input.GetKeyDown(laneKeys[lane]))
             {
                 laneHolding[lane] = true;
-                CheckHit(lane, true);
+                bool hitSomething = CheckHit(lane);
+
+                //Lose combo if spamming
+                if (!hitSomething)
+                    ComboManager.Instance.ResetCombo();
             }
 
-            // Key released
             if (Input.GetKeyUp(laneKeys[lane]))
             {
                 laneHolding[lane] = false;
@@ -40,18 +41,19 @@ public class InputManager : MonoBehaviour
         }
     }
 
-    private void CheckHit(int lane, bool holdingKey)
+    private bool CheckHit(int lane)
     {
-        if (lane < 0 || lane >= laneSpawnPoints.Length) return;
+        if (lane < 0 || lane >= laneSpawnPoints.Length) return false;
 
-        Note[] laneNotes = FindObjectsOfType<Note>();
+        Note[] notes = FindObjectsOfType<Note>();
         Note closest = null;
         float closestDist = float.MaxValue;
 
-        foreach (var note in laneNotes)
+        foreach (var note in notes)
         {
-            // Only notes in this lane
-            if (Mathf.Abs(note.transform.position.x - laneSpawnPoints[lane].position.x) > 0.5f) continue;
+            //Only notes in this lane
+            if (Mathf.Abs(note.transform.position.x - laneSpawnPoints[lane].position.x) > 0.5f)
+                continue;
 
             float dist = Mathf.Abs(note.transform.position.y - hitLine.position.y);
             if (dist < closestDist)
@@ -63,27 +65,26 @@ public class InputManager : MonoBehaviour
 
         if (closest != null && closestDist <= hitTolerance)
         {
-            closest.Hit(holdingKey);
+            closest.Hit();
             Debug.Log($"Hit lane {lane} ({(closest.isHold ? "Hold" : "Tap")})");
+            return true;
         }
+
+        return false;
     }
 
     private void ReleaseHold(int lane)
     {
         if (lane < 0 || lane >= laneSpawnPoints.Length) return;
 
-        Note[] laneNotes = FindObjectsOfType<Note>();
-
-        foreach (var note in laneNotes)
+        Note[] notes = FindObjectsOfType<Note>();
+        foreach (var note in notes)
         {
-            // Only notes in this lane
-            if (Mathf.Abs(note.transform.position.x - laneSpawnPoints[lane].position.x) > 0.5f) continue;
+            if (Mathf.Abs(note.transform.position.x - laneSpawnPoints[lane].position.x) > 0.5f)
+                continue;
 
             if (note.isHold)
-            {
-                note.ReleaseHold(); // stops scaling and triggers miss if released early
-                Debug.Log("Stopped holding | Missed");
-            }
+                note.ReleaseHold();
         }
     }
 }

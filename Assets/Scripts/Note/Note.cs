@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class Note : MonoBehaviour
 {
@@ -6,123 +7,177 @@ public class Note : MonoBehaviour
     public float speed = 5f;
     public Transform hitLine;
 
-    [Header("Hold Note")]
+    [Header("Hold Note Settings")]
     public bool isHold = false;
     public float holdDuration = 0f;
+    public Color holdColor = Color.white;
+    public Material holdMaterial;
 
-    [Header("Pulse")]
-    public float pulseScaleMin = 1.5f;
-    public float pulseScaleMax = 1.7f;
-    public float pulseSpeed = 8f;
-
-    private bool hit = false;
+    private bool isHit = false;
     private bool isHolding = false;
+    private bool holdCompleted = false;
     private float holdTimer = 0f;
-
-    private Transform holdVisual; // hold line
+    private Transform holdLine;
     private Vector3 originalScale;
+    private const float holdGrace = 0.15f; //early/late release grace period
 
-    private void Awake()
+    private void Start()
     {
         originalScale = transform.localScale;
 
         if (isHold)
         {
-            // Create hold visual line going upward from the top of the note
-            holdVisual = GameObject.CreatePrimitive(PrimitiveType.Cube).transform;
-            holdVisual.parent = transform;
+            //Create the hold line visually extending upward from the note
+            GameObject line = GameObject.CreatePrimitive(PrimitiveType.Cube);
+            Destroy(line.GetComponent<BoxCollider>());
+            holdLine = line.transform;
+            holdLine.SetParent(transform);
+            holdLine.localPosition = Vector3.up * (holdDuration * speed / 2f);
+            holdLine.localScale = new Vector3(0.15f, holdDuration * speed, 0.1f);
 
-            float lineLength = holdDuration * speed;
-            holdVisual.localScale = new Vector3(0.8f, lineLength, 0.8f);
-            holdVisual.localPosition = new Vector3(0, transform.localScale.y / 2f + lineLength / 2f, 0);
+            Renderer rend = holdLine.GetComponent<Renderer>();
 
-            Destroy(holdVisual.GetComponent<Collider>());
+            if (holdMaterial != null)
+            {
+                //Set hold line material
+                rend.material = holdMaterial;
+                rend.material.color = holdColor;
+            }
+            else
+            {
+                var mat = new Material(Shader.Find("Unlit/Color"));
+                mat.color = holdColor;
+                rend.material = mat;
+            }
         }
     }
 
     private void Update()
     {
-        // Move note downward
-        if (!hit)
+        if (!isHit)
         {
             transform.position += Vector3.down * speed * Time.deltaTime;
 
-            if (!isHold && transform.position.y < hitLine.position.y - 0.1f)
+            if (transform.position.y < hitLine.position.y - 1f)
                 Miss();
         }
-
-        // Hold note logic
-        if (hit && isHold)
+        else if (isHold && isHolding)
         {
-            if (isHolding)
+            holdTimer += Time.deltaTime;
+            float remaining = Mathf.Clamp(holdDuration - holdTimer, 0f, holdDuration);
+
+            //Pulse effect only on the note
+            float pulse = Mathf.Sin(Time.time * 50f) * 0.1f + 1.1f;
+            transform.localScale = originalScale * pulse;
+
+            if (holdLine)
             {
-                holdTimer += Time.deltaTime;
-                float remaining = Mathf.Clamp(holdDuration - holdTimer, 0f, holdDuration);
+                //Keep line visually stable (no pulsing movement)
+                float baseWidth = 0.2f;
+                float baseDepth = 0.1f;
 
-                // Update hold visual length
-                if (holdVisual != null)
-                {
-                    holdVisual.localScale = new Vector3(0.8f, remaining * speed, 0.8f);
-                    holdVisual.localPosition = new Vector3(0, transform.localScale.y / 2f + holdVisual.localScale.y / 2f, 0);
-                }
+                holdLine.localScale = new Vector3(baseWidth / pulse, remaining * speed, baseDepth / pulse);
 
-                // Pulse the note scale
-                float pulse = Mathf.PingPong(Time.time * pulseSpeed, 1f); // 0 -> 1
-                float scale = Mathf.Lerp(pulseScaleMin, pulseScaleMax, pulse);
-                transform.localScale = originalScale * scale;
-
-                if (holdTimer >= holdDuration)
-                {
-                    DestroyNote();
-                }
+                //Keep vertical position stable regardless of pulse
+                holdLine.localPosition = Vector3.up * (remaining * speed / 2f);
             }
-            else
-            {
-                // Released early -> miss
-                Miss();
-            }
+
+            //Auto complete when finished holding
+            if (holdTimer >= holdDuration)
+                HoldComplete();
         }
     }
 
-    public void Hit(bool holdingKey = false)
+
+    public void Hit()
     {
-        if (hit) return;
-        hit = true;
+        if (isHit) return;
+        isHit = true;
 
-        // Snap to hit line
-        Vector3 pos = transform.position;
-        pos.y = hitLine.position.y;
-        transform.position = pos;
-
-        // Instant pop
-        transform.localScale = originalScale * pulseScaleMin;
+        transform.position = new Vector3(transform.position.x, hitLine.position.y, transform.position.z);
 
         if (isHold)
         {
-            isHolding = holdingKey;
+            isHolding = true;
+            ComboManager.Instance.StartHoldPulse();
+            ComboManager.Instance.AddCombo(false);
+            transform.localScale = originalScale * 1.3f;
         }
         else
         {
-            DestroyNote();
+            ComboManager.Instance.AddCombo(false);
+            StartCoroutine(PopThenDestroy());
         }
     }
 
     public void ReleaseHold()
     {
-        if (isHold && hit)
+        if (!isHold || !isHolding) return;
+
+        if (holdTimer >= holdDuration - holdGrace)
         {
-            isHolding = false;
+            HoldComplete();
         }
+        else
+        {
+            ComboManager.Instance.StopHoldPulse();
+            Debug.Log("Hold released too early! | Missed");
+            Miss();
+        }
+    }
+
+    private void HoldComplete()
+    {
+        if (!isHolding || holdCompleted) return;
+
+        holdCompleted = true;
+        isHolding = false;
+
+        //Add second combo point without restarting hold pulse
+        ComboManager.Instance.AddCombo(false);
+        //Stop the pulse
+        ComboManager.Instance.StopHoldPulse();
+        StartCoroutine(ShrinkAndDestroy());
+    }
+
+    private IEnumerator PopThenDestroy()
+    {
+        float duration = 0.05f;
+        float timer = 0f;
+        Vector3 start = transform.localScale;
+        Vector3 end = start * 1.6f;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            transform.localScale = Vector3.Lerp(start, end, timer / duration);
+            yield return null;
+        }
+
+        yield return new WaitForSeconds(0.05f);
+        Destroy(gameObject);
+    }
+
+    private IEnumerator ShrinkAndDestroy()
+    {
+        float duration = 0.05f;
+        float timer = 0f;
+        Vector3 start = transform.localScale;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            transform.localScale = Vector3.Lerp(start, Vector3.zero, timer / duration);
+            yield return null;
+        }
+
+        Destroy(gameObject);
     }
 
     private void Miss()
     {
         Debug.Log("Miss!");
-        DestroyNote();
-    }
-
-    private void DestroyNote()
-    {
+        ComboManager.Instance.ResetCombo();
         Destroy(gameObject);
     }
 }

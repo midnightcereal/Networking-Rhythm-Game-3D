@@ -119,6 +119,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 0
-  hitY: 0
+  hitLine: {fileID: 0}
   isHold: 0
   holdDuration: 0
+  holdColor: {r: 1, g: 1, b: 1, a: 1}
+  holdMaterial: {fileID: 2100000, guid: f1a27f6e81f638940925f3884f8717c7, type: 2}

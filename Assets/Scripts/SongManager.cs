@@ -5,10 +5,10 @@ using System.Collections.Generic;
 [System.Serializable]
 public class NoteData
 {
-    public float time;           // Time in seconds relative to song
-    public int lane;             // 0-3
-    public string type;          // "tap" or "hold"
-    public float holdDuration;   // seconds
+    public float time;           //Time in seconds relative to song
+    public int lane;             //0-3
+    public string type;          //"tap" or "hold"
+    public float holdDuration;   //seconds
 }
 
 [System.Serializable]
@@ -16,7 +16,7 @@ public class SongData
 {
     public string songName;
     public float bpm;
-    public string audioFile;            // Name of WAV file in Resources
+    public string audioFile;
     public NoteData[] notes;
 }
 
@@ -29,7 +29,7 @@ public class SongManager : MonoBehaviour
     [Header("BPM Scaling")]
     public float baseBPM = 120f;
     public float baseNoteSpeed = 5f;
-    public float visualScale = 1f; // tweak to make notes slower or faster
+    public float visualScale = 1f;
 
     [Header("Notes")]
     public GameObject notePrefab;
@@ -61,7 +61,7 @@ public class SongManager : MonoBehaviour
         songData = JsonUtility.FromJson<SongData>(file.text);
         notes = new List<NoteData>(songData.notes);
 
-        // Scale note speed relative to BPM
+        //Scale note speed relative to BPM
         float bpmFactor = songData.bpm / baseBPM;
         noteSpeed = baseNoteSpeed * bpmFactor * visualScale;
     }
@@ -86,12 +86,12 @@ public class SongManager : MonoBehaviour
 
         foreach (var note in notes)
         {
-            // Time the note should spawn (note.time - travelTime)
+            //Time the note should spawn (note.time - travelTime)
             float travelDistance = Mathf.Abs(laneSpawnPoints[note.lane].position.y - hitLine.position.y);
             float travelTime = travelDistance / noteSpeed;
             float spawnTime = note.time - travelTime;
 
-            // Delay relative to last spawn
+            //Delay relative to last spawn
             float delay = spawnTime - lastSpawnTime;
             if (delay > 0f)
                 yield return new WaitForSeconds(delay);
