@@ -1,0 +1,12 @@
+{
+  "songName": "Test Song",
+  "bpm": 30,
+  "speedMultiplier": 0.1,
+  "audioFile": "digicore_mine",
+  "notes": [
+    { "time": 1.0, "lane": 0, "type": "tap", "holdDuration": 0 },
+    { "time": 2.0, "lane": 1, "type": "hold", "holdDuration": 1.0 },
+    { "time": 3.0, "lane": 2, "type": "tap", "holdDuration": 0},
+    { "time": 4.0, "lane": 3, "type": "hold", "holdDuration": 2.0 }
+  ]
+}
