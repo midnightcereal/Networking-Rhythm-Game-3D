@@ -1,105 +1,86 @@
 using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections;
 
 public class CameraColourManager : MonoBehaviour
 {
-    [Header("Camera Settings")]
-    public Camera targetCamera;
-    public float transitionDuration = 1f;
+    private Camera cam;
+    private List<Color> availableColours = new List<Color>();
+    private List<Color> recentColours = new List<Color>();
 
-    [Header("Beat Settings")]
-    public float bpm = 120f;
-    public int beatsPerColorChange = 4;
+    private int colourChangeBeats;
+    private float bpm;
+    private float beatInterval;
+    private float nextColourTime;
+    private AudioSource songAudio;
 
-    private float secondsPerBeat;
-    private float nextColorTime;
-    private AudioSource musicSource;
-
-    private List<Color> availableColors = new();
-    private List<Color> recentColors = new();
-    private Color currentColor;
-
-    private void Start()
+    private void Awake()
     {
-        if (!targetCamera)
-            targetCamera = Camera.main;
-
-        musicSource = FindObjectOfType<AudioSource>();
-        secondsPerBeat = 60f / bpm;
-        nextColorTime = beatsPerColorChange * secondsPerBeat;
-
-        if (availableColors.Count == 0)
+        cam = GetComponent<Camera>();
+        if (cam == null)
         {
-            availableColors.Add(Color.red);
-            availableColors.Add(Color.blue);
-            availableColors.Add(Color.green);
+            Debug.LogError("CameraColorManager must be attached to a Camera.");
+        }
+    }
+
+    public void Initialize(string[] hexColours, float bpm, int colourChangeBeats, AudioSource audioSource)
+    {
+        availableColours.Clear();
+        recentColours.Clear();
+        this.bpm = bpm;
+        this.colourChangeBeats = colourChangeBeats;
+        this.songAudio = audioSource;
+
+        //Convert hex colours to Unity Colour
+        foreach (string hex in hexColours)
+        {
+            if (ColorUtility.TryParseHtmlString(hex, out Color c))
+                availableColours.Add(c);
         }
 
-        //Start with a random colour
-        currentColor = availableColors[Random.Range(0, availableColors.Count)];
-        targetCamera.backgroundColor = currentColor;
+        if (availableColours.Count == 0)
+        {
+            Debug.LogWarning("No valid colours found in level JSON.");
+            return;
+        }
+
+        beatInterval = 60f / bpm;
+        nextColourTime = 0f;
     }
 
     private void Update()
     {
-        if (musicSource == null || !musicSource.isPlaying) return;
+        if (songAudio == null || availableColours.Count == 0)
+            return;
 
-        if (musicSource.time >= nextColorTime)
+        //Time when switch to the next colour (based on audio)
+        if (songAudio.time >= nextColourTime)
         {
-            PickNextColor();
-            nextColorTime += beatsPerColorChange * secondsPerBeat;
+            ChangeToNextColour();
+            nextColourTime += beatInterval * colourChangeBeats;
         }
     }
 
-    public void Initialize(float bpmValue, int beatsPerChange, List<Color> colors)
+    private void ChangeToNextColour()
     {
-        bpm = bpmValue;
-        beatsPerColorChange = beatsPerChange;
-        availableColors = colors;
+        if (availableColours.Count == 0) return;
 
-        secondsPerBeat = 60f / bpm;
-        nextColorTime = beatsPerColorChange * secondsPerBeat;
-
-        if (availableColors.Count > 0)
-            currentColor = availableColors[Random.Range(0, availableColors.Count)];
-
-        if (targetCamera)
-            targetCamera.backgroundColor = currentColor;
-    }
-
-    private void PickNextColor()
-    {
-        if (availableColors.Count == 0) return;
-
-        Color nextColor;
+        Color newColour;
         int attempts = 0;
+
+        //Avoid repeating the last 3 colours
         do
         {
-            nextColor = availableColors[Random.Range(0, availableColors.Count)];
+            newColour = availableColours[Random.Range(0, availableColours.Count)];
             attempts++;
         }
-        while (recentColors.Contains(nextColor) && attempts < 50);
+        while (recentColours.Contains(newColour) && attempts < 10);
 
-        //Update recent colours memory
-        recentColors.Add(nextColor);
-        if (recentColors.Count > 3)
-            recentColors.RemoveAt(0);
+        cam.backgroundColor = newColour;
 
-        StopAllCoroutines();
-        StartCoroutine(LerpColor(currentColor, nextColor));
-        currentColor = nextColor;
-    }
-
-    private IEnumerator LerpColor(Color from, Color to)
-    {
-        float t = 0f;
-        while (t < transitionDuration)
-        {
-            t += Time.deltaTime;
-            targetCamera.backgroundColor = Color.Lerp(from, to, t / transitionDuration);
-            yield return null;
-        }
-        targetCamera.backgroundColor = to;
+        //Update recent colours
+        recentColours.Add(newColour);
+        if (recentColours.Count > 3)
+            recentColours.RemoveAt(0);
     }
 }

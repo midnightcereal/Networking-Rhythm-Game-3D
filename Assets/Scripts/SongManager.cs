@@ -18,6 +18,10 @@ public class SongData
     public float bpm;
     public string audioFile;
     public NoteData[] notes;
+
+    //Camera colour changes
+    public string[] availableColours;
+    public int colourChangeBeats = 4;
 }
 
 public class SongManager : MonoBehaviour
@@ -41,11 +45,13 @@ public class SongManager : MonoBehaviour
     private float noteSpeed;
     private AudioSource audioSource;
     private SongData songData;
+    private CameraColourManager colourManager;
 
     private void Start()
     {
         LoadSong();
         SetupAudio();
+        SetupColourSystem();
         StartCoroutine(SpawnNotes());
     }
 
@@ -78,6 +84,20 @@ public class SongManager : MonoBehaviour
         audioSource = gameObject.AddComponent<AudioSource>();
         audioSource.clip = clip;
         audioSource.Play();
+    }
+
+    private void SetupColourSystem()
+    {
+        colourManager = Camera.main.GetComponent<CameraColourManager>();
+        if (colourManager && songData.availableColours != null && songData.availableColours.Length > 0)
+        {
+            colourManager.Initialize(songData.availableColours, songData.bpm, songData.colourChangeBeats, audioSource);
+            Debug.Log("Set up camera colours succesfully");
+        }
+        else
+        {
+            Debug.LogError("Error setting up camera colours");
+        }
     }
 
     private IEnumerator SpawnNotes()
