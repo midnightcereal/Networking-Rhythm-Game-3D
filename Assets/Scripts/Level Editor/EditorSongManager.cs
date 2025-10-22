@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
@@ -49,7 +50,11 @@ public class EditorSongManager : MonoBehaviour
     public List<GameObject> runtimeSegments = new List<GameObject>();
 
     [Header("Camera & Input")]
+    [SerializeField] private Transform trackContainer;
     public float scrollSpeed = 5f;
+    [SerializeField] private float cameraReturnSpeed = 5f;
+    float defaultCameraY = 0f;
+    private Coroutine cameraMoveRoutine;
 
     [Header("Lanes")]
     public float[] laneXPositions = new float[] { -9.2f, -2.88f, 2.88f, 9.22f };
@@ -68,8 +73,15 @@ public class EditorSongManager : MonoBehaviour
     [HideInInspector] public AudioSource audioSource;
     private string songName = "No Song Loaded";
 
+    [Header("Playback Bar")]
+    public GameObject playStartBarPrefab;
+    private GameObject currentPlayStartBar = null;
+    private float? playStartY = null;
+    private float storedBarY = 0f;
+
     private void Start()
     {
+        defaultCameraY = Camera.main.transform.position.y;
         SpawnSegments();
         UpdateSegmentHeight();
         UpdateSegmentTexts();
@@ -171,6 +183,11 @@ public class EditorSongManager : MonoBehaviour
     {
         Vector3 mousePos = Input.mousePosition;
 
+        if (Input.GetMouseButtonDown(2)) // middle mouse
+        {
+            PlacePlayStartBar();
+        }
+
         //Delete mode
         if (Input.GetMouseButtonDown(1))
         {
@@ -239,7 +256,7 @@ public class EditorSongManager : MonoBehaviour
     //    }
     //}
 
-        #region Track Movement
+    #region Track Movement
     private void HandleScroll()
     {
         float scroll = Input.GetAxis("Mouse ScrollWheel");
@@ -361,6 +378,12 @@ public class EditorSongManager : MonoBehaviour
                 }
             }
         }
+
+        //Move play bar
+        if (currentPlayStartBar != null)
+        {
+            currentPlayStartBar.transform.position = new Vector3(0f, storedBarY - scrollOffset, laneZ - 0.5f);
+        }
     }
 
     ///<summary>
@@ -392,6 +415,37 @@ public class EditorSongManager : MonoBehaviour
         }
     }
 
+    private void PlacePlayStartBar()
+    {
+        if (playStartBarPrefab == null)
+        {
+            Debug.LogWarning("No playStartBarPrefab assigned!");
+            return;
+        }
+
+        Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+        Plane plane = new Plane(Vector3.forward, new Vector3(0f, 0f, laneZ));
+
+        if (plane.Raycast(ray, out float enter))
+        {
+            Vector3 hit = ray.GetPoint(enter);
+
+            //Remove any existing bar
+            if (currentPlayStartBar != null)
+                DestroyImmediate(currentPlayStartBar);
+
+            //Spawn new bar at hit.y
+            currentPlayStartBar = Instantiate(playStartBarPrefab);
+            currentPlayStartBar.transform.position = new Vector3(0f, hit.y, laneZ - 0.5f);
+            currentPlayStartBar.transform.localScale = new Vector3(25f, 0.1f, 0.5f);
+            currentPlayStartBar.name = "PlayStartBar";
+
+            storedBarY = hit.y;
+            playStartY = hit.y;
+
+            Debug.Log($"Set Play Start Bar at Y={playStartY:F2}");
+        }
+    }
     #endregion
 
     private EditorNote PlaceNoteOnTrack(Vector3 mouseScreenPos, bool hold)
@@ -577,22 +631,51 @@ public class EditorSongManager : MonoBehaviour
     public void PlayFromCamera()
     {
         if (!audioSource) audioSource = GetComponent<AudioSource>();
-        if (!audioSource) audioSource = gameObject.AddComponent<AudioSource>();
+        if (!audioSource || audioSource.clip == null) return;
 
-        if (audioSource.clip == null)
+        float startTime = 0f;
+
+        if (playStartY.HasValue)
         {
-            Debug.LogWarning("Assign audio clip first.");
-            return;
+            startTime = Mathf.Max(0f, (playStartY.Value - trackStartY) * speedMultiplier);
+        }
+        else
+        {
+            //Fallback to camera position
+            float camY = Camera.main.transform.position.y;
+            startTime = Mathf.Max(0f, (camY - trackStartY) * speedMultiplier);
         }
 
-        //Start playback from camera position
-        float startTime = (Camera.main.transform.position.y - trackStartY) * speedMultiplier;
         startTime = Mathf.Clamp(startTime, 0f, audioSource.clip.length);
-
         audioSource.time = startTime;
         audioSource.Play();
 
-        Debug.Log($"> Playing from {startTime:F2}s");
+        //Move camera to default (hit bar area) when starting
+        Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, trackStartY, Camera.main.transform.position.z);
+
+        Debug.Log($"> Playing from {startTime:F2}s (bar Y={playStartY})");
+    }
+
+    private IEnumerator DelayedPlay(float startTime, float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        audioSource.time = startTime;
+        audioSource.Play();
+    }
+
+    private IEnumerator MoveCameraToDefault()
+    {
+        Transform cam = Camera.main.transform;
+        Vector3 startPos = cam.position;
+        Vector3 targetPos = new Vector3(startPos.x, defaultCameraY, startPos.z);
+        float t = 0f;
+
+        while (t < 1f)
+        {
+            t += Time.deltaTime * cameraReturnSpeed;
+            cam.position = Vector3.Lerp(startPos, targetPos, t);
+            yield return null;
+        }
     }
 
     public void PauseAudio()
@@ -609,10 +692,20 @@ public class EditorSongManager : MonoBehaviour
             audioSource.time = 0f;
         }
 
+        //Remove play start bar and reset custom start
+        if (currentPlayStartBar != null)
+        {
+            DestroyImmediate(currentPlayStartBar);
+            currentPlayStartBar = null;
+        }
+        playStartY = null;
+
         Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, trackStartY, Camera.main.transform.position.z);
         Camera.main.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
 
         ResetSegmentTextPositions();
+
+        Debug.Log("> Restarted track and removed play start bar.");
     }
 
     #endregion
