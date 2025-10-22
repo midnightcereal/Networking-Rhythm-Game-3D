@@ -77,6 +77,7 @@ public class EditorSongManager : MonoBehaviour
 
     public void SpawnSegments()
     {
+        ClearAllSegments();
         // Fully clean old segments first
         foreach (var s in runtimeSegments)
         {
@@ -124,6 +125,36 @@ public class EditorSongManager : MonoBehaviour
                 runtimeSegments.Add(segObj);
             }
         }
+    }
+
+    public void ClearAllSegments()
+    {
+        // Destroy all runtime segment objects
+        foreach (var s in runtimeSegments)
+        {
+            if (s != null)
+            {
+#if UNITY_EDITOR
+                if (!Application.isPlaying)
+                    DestroyImmediate(s);
+                else
+                    Destroy(s);
+#else
+            Destroy(s);
+#endif
+            }
+        }
+        runtimeSegments.Clear();
+
+        // Optional: find any lingering TMP labels in the scene and remove them
+#if UNITY_EDITOR
+        TMPro.TextMeshProUGUI[] tmpLabels = FindObjectsOfType<TMPro.TextMeshProUGUI>();
+        foreach (var t in tmpLabels)
+        {
+            if (!runtimeSegments.Contains(t.transform.root.gameObject))
+                DestroyImmediate(t.gameObject);
+        }
+#endif
     }
 
     private void Update()
@@ -407,21 +438,25 @@ public class EditorSongManager : MonoBehaviour
         hit.x = laneXPositions[laneIndex];
         hit.z = laneZ;
 
-        // Snap Y to nearest segment
+        // Find nearest segment
         int nearestSegment = Mathf.RoundToInt((hit.y - trackStartY) / segmentHeight);
-        hit.y = trackStartY + nearestSegment * segmentHeight;
 
-
-        // Prevent overlapping notes
+        // Check for existing note in the same lane & segment
         foreach (var n in notes)
         {
             if (n == null) continue;
-            int nSegment = Mathf.RoundToInt(n.transform.position.y / segmentHeight);
+            int nSegment = Mathf.RoundToInt((n.transform.position.y - trackStartY) / segmentHeight);
             if (nSegment == nearestSegment && n.lane == laneIndex)
             {
                 Debug.Log("Segment already has a note on this lane!");
                 return null;
             }
+        }
+
+        // Snap Y unless shift is held
+        if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+        {
+            hit.y = trackStartY + nearestSegment * segmentHeight;
         }
 
         // Instantiate note
