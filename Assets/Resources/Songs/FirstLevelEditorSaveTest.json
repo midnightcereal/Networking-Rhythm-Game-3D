@@ -1,0 +1,106 @@
+{
+    "songName": "TestSong",
+    "bpm": 178.0,
+    "speedMultiplier": 0.10000000149011612,
+    "audioFile": "digicore_tutorial",
+    "colourChangeBeats": 1,
+    "availableColours": ["#ff4b81", "#00c3ff", "#8aff6c", "#ffb347", "#a36cff", "FFD86C", "6CFFC9", "6C80FF"],
+    "notes": [
+        {
+            "positionY": 68.99921417236328,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 85.17899322509766,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 95.96550750732422,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 112.1452865600586,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 117.53854370117188,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 122.93180084228516,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 139.111572265625,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 149.89808654785157,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 166.07786560058595,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 171.47113037109376,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 176.8643798828125,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 149.89808654785157,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 1.189967393875122
+        },
+        {
+            "positionY": 139.111572265625,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 0.7715194821357727
+        },
+        {
+            "positionY": 166.07786560058595,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 0.356649786233902
+        },
+        {
+            "positionY": 171.47113037109376,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 0.3625244200229645
+        },
+        {
+            "positionY": 125.62843322753906,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 0.9828155636787415
+        }
+    ]
+}

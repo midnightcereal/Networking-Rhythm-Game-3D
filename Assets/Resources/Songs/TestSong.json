@@ -2,7 +2,7 @@
   "songName": "Test Song",
   "bpm": 178,
   "speedMultiplier": 0.1,
-  "audioFile": "digicore_mine",
+  "audioFile": "digicore_tutorial",
   "colourChangeBeats": 1,
   "availableColours": ["#ff4b81", "#00c3ff", "#8aff6c", "#ffb347", "#a36cff", "FFD86C", "6CFFC9", "6C80FF"],
 

@@ -1,14 +1,13 @@
-using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
 
 [System.Serializable]
 public class NoteData
 {
-    public float time;           //Time in seconds relative to song
-    public int lane;             //0-3
-    public string type;          //"tap" or "hold"
-    public float holdDuration;   //seconds
+    public float positionY;
+    public int lane;
+    public string type; // "tap" or "hold"
+    public float holdDuration;
 }
 
 [System.Serializable]
@@ -16,124 +15,99 @@ public class SongData
 {
     public string songName;
     public float bpm;
+    public float speedMultiplier = 0.1f; // editor multiplier
     public string audioFile;
     public NoteData[] notes;
-
-    //Camera colour changes
-    public string[] availableColours;
-    public int colourChangeBeats = 4;
 }
 
 public class SongManager : MonoBehaviour
 {
-    [Header("Lanes")]
-    public Transform[] laneSpawnPoints;
+    [Header("Notes & Lanes")]
+    public GameObject notePrefab;
+    public float laneZ = 9.5f;
+    public float[] laneXPositions = new float[] { -9.2f, -2.88f, 2.88f, 9.22f };
     public Transform hitLine;
 
-    [Header("BPM Scaling")]
-    public float baseBPM = 120f;
-    public float baseNoteSpeed = 5f;
-    public float visualScale = 1f;
+    [Header("Audio & Timing")]
+    public string songJsonFile = "TestSong"; // from Resources/Songs
+    public AudioSource audioSource;
 
-    [Header("Notes")]
-    public GameObject notePrefab;
+    [Header("Editor Settings")]
+    public float segmentHeight = 1f; // must match EditorSongManager
+    public float bpm = 120f;
+    public int beatSubdivision = 4; // must match EditorSongManager
+    public float speedMultiplier = 0.1f; // must match EditorSongManager
 
-    [Header("Song JSON")]
-    public string songJsonFile = "Songs/TestSong";
-
-    private List<NoteData> notes;
-    private float noteSpeed;
-    private AudioSource audioSource;
     private SongData songData;
-    private CameraColourManager colourManager;
+    private List<GameObject> spawnedNotes = new List<GameObject>();
 
     private void Start()
     {
         LoadSong();
-        SetupAudio();
-        SetupColourSystem();
-        StartCoroutine(SpawnNotes());
+        SpawnAllNotes();
+        PlayAudio();
     }
 
     private void LoadSong()
     {
-        TextAsset file = Resources.Load<TextAsset>(songJsonFile);
+        TextAsset file = Resources.Load<TextAsset>($"Songs/{songJsonFile}");
         if (file == null)
         {
-            Debug.LogError("Song JSON not found: " + songJsonFile);
+            Debug.LogError($"Song JSON not found: {songJsonFile}");
             return;
         }
 
         songData = JsonUtility.FromJson<SongData>(file.text);
-        notes = new List<NoteData>(songData.notes);
 
-        //Scale note speed relative to BPM
-        float bpmFactor = songData.bpm / baseBPM;
-        noteSpeed = baseNoteSpeed * bpmFactor * visualScale;
-    }
+        // override editor values if JSON has them
+        bpm = songData.bpm;
+        speedMultiplier = songData.speedMultiplier;
 
-    private void SetupAudio()
-    {
-        AudioClip clip = Resources.Load<AudioClip>(songData.audioFile);
-        if (clip == null)
+        if (audioSource == null) audioSource = gameObject.AddComponent<AudioSource>();
+
+        if (!string.IsNullOrEmpty(songData.audioFile))
         {
-            Debug.LogError("Audio file not found in Resources: " + songData.audioFile);
-            return;
-        }
-
-        audioSource = gameObject.AddComponent<AudioSource>();
-        audioSource.clip = clip;
-        audioSource.Play();
-    }
-
-    private void SetupColourSystem()
-    {
-        colourManager = Camera.main.GetComponent<CameraColourManager>();
-        if (colourManager && songData.availableColours != null && songData.availableColours.Length > 0)
-        {
-            colourManager.Initialize(songData.availableColours, songData.bpm, songData.colourChangeBeats, audioSource);
-            Debug.Log("Set up camera colours succesfully");
-        }
-        else
-        {
-            Debug.LogError("Error setting up camera colours");
+            AudioClip clip = Resources.Load<AudioClip>($"Songs/{songData.audioFile}");
+            if (clip) audioSource.clip = clip;
+            else Debug.LogWarning($"Audio file '{songData.audioFile}' not found!");
         }
     }
 
-    private IEnumerator SpawnNotes()
+    private void SpawnAllNotes()
     {
-        float lastSpawnTime = 0f;
+        if (notePrefab == null || songData == null || songData.notes == null) return;
 
-        foreach (var note in notes)
+        // calculate falling speed exactly like in editor
+        float noteSpeed = (60f / bpm) / (beatSubdivision / 4f) / segmentHeight * speedMultiplier;
+        // or simpler: speed = segmentHeight / (time per segment)
+        // here we just use the same speedMultiplier as editor for consistency
+
+        float manualOffset = 1f; // offset in seconds to fix the sync between editor and game scenes
+
+        foreach (var n in songData.notes)
         {
-            //Time the note should spawn (note.time - travelTime)
-            float travelDistance = Mathf.Abs(laneSpawnPoints[note.lane].position.y - hitLine.position.y);
-            float travelTime = travelDistance / noteSpeed;
-            float spawnTime = note.time - travelTime;
+            Vector3 pos = new Vector3(laneXPositions[n.lane], n.positionY, laneZ);
+            GameObject noteObj = Instantiate(notePrefab, pos, Quaternion.identity);
+            spawnedNotes.Add(noteObj);
 
-            //Delay relative to last spawn
-            float delay = spawnTime - lastSpawnTime;
-            if (delay > 0f)
-                yield return new WaitForSeconds(delay);
-
-            SpawnNote(note);
-            lastSpawnTime = spawnTime;
+            Note noteScript = noteObj.GetComponent<Note>();
+            if (noteScript != null)
+            {
+                noteScript.isHold = n.type == "hold";
+                noteScript.holdDuration = n.holdDuration;
+                noteScript.hitLine = hitLine;
+                noteScript.time = (n.positionY * speedMultiplier) - manualOffset; // match editor-style timing
+                noteScript.speedMultiplier = speedMultiplier;    // pass the multiplier
+            }
         }
     }
 
-    private void SpawnNote(NoteData data)
+    private void PlayAudio()
     {
-        if (data.lane < 0 || data.lane >= laneSpawnPoints.Length) return;
-
-        Transform spawnPoint = laneSpawnPoints[data.lane];
-        Vector3 spawnPos = spawnPoint.position;
-
-        GameObject noteObj = Instantiate(notePrefab, spawnPos, Quaternion.identity);
-
-        Note noteScript = noteObj.GetComponent<Note>();
-        noteScript.speed = noteSpeed;
-        noteScript.hitLine = hitLine;
-        noteScript.isHold = data.type == "hold";
-        noteScript.holdDuration = data.holdDuration;
+        if (audioSource != null && audioSource.clip != null)
+        {
+            audioSource.time = 0f;
+            audioSource.Play();
+        }
     }
 }

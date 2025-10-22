@@ -1,0 +1,56 @@
+{
+    "songName": "TestSong",
+    "bpm": 178.0,
+    "speedMultiplier": 0.10000000149011612,
+    "audioFile": "digicore_tutorial",
+    "notes": [
+        {
+            "positionY": 23.156517028808595,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 25.853145599365236,
+            "lane": 1,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 28.549776077270509,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 31.24640464782715,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 33.94303512573242,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 36.63966369628906,
+            "lane": 1,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 39.3362922668457,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 42.03292465209961,
+            "lane": 3,
+            "type": "hold",
+            "holdDuration": 1.1903995275497437
+        }
+    ]
+}
