@@ -927,18 +927,24 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b9d10c681e4b2bc4e96ddf9f1f923e97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  laneSpawnPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  hitLine: {fileID: 65155699}
-  baseBPM: 120
-  baseNoteSpeed: 20
-  visualScale: 1
   notePrefab: {fileID: 4524379961284188243, guid: c4162f669ebd6f94eb97b7025f3eacd6,
     type: 3}
+  laneZ: 9.5
+  laneXPositions:
+  - -9.2
+  - -2.88
+  - 2.88
+  - 9.22
+  hitLine: {fileID: 65155699}
+  manualOffset: 1
+  preRollSeconds: 3
   songJsonFile: Songs/TestSong
+  audioSource: {fileID: 0}
+  segmentHeight: 1
+  bpm: 120
+  beatSubdivision: 4
+  speedMultiplier: 0.1
+  cameraColourManager: {fileID: 0}
 --- !u!4 &1133650419
 Transform:
   m_ObjectHideFlags: 0

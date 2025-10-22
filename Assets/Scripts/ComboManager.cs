@@ -26,9 +26,18 @@ public class ComboManager : MonoBehaviour
     }
 
     ///<summary>
+    ///Starts tap animation
+    ///</summary>
+    public void PlayPopAnimation(Note note)
+    {
+        if (note == null) return;
+        StartCoroutine(TapBounce());
+    }
+
+    ///<summary>
     ///Starts continuous hold pulse animation
     ///</summary>
-    public void StartHoldPulse()
+    public void StartHoldPulse(Note note)
     {
         if (!isHolding)
         {
@@ -40,7 +49,7 @@ public class ComboManager : MonoBehaviour
     ///<summary>
     ///Stops the hold pulse animation
     ///</summary>
-    public void StopHoldPulse()
+    public void StopHoldPulse(Note note = null)
     {
         if (holdCoroutine != null)
         {
@@ -55,19 +64,20 @@ public class ComboManager : MonoBehaviour
     ///<summary>
     ///Increment combo count and trigger animations
     ///</summary>
-    public void AddCombo(bool isHold)
+    public void AddCombo(bool isHold, Note note = null)
     {
         combo++;
         UpdateComboText();
 
         if (combo < 2) return;
 
-        //Tap animation only if not currently holding
+        // Tap animation only if not currently holding
         if (!isHold && !isHolding)
             StartCoroutine(TapBounce());
-        //Start hold pulse if this is a hold note
+
+        // Start hold pulse if this is a hold note
         else if (isHold && !isHolding)
-            StartHoldPulse();
+            StartHoldPulse(note);
     }
 
     ///<summary>
@@ -127,28 +137,32 @@ public class ComboManager : MonoBehaviour
 
         float halfCycle = holdBounceDuration / 2f;
 
-        while (true)
+        while (isHolding)
         {
-            //Move up
+            // Move up
             float timer = 0f;
             Vector3 start = originalPos;
             Vector3 end = originalPos + Vector3.up * holdBounceAmplitude;
 
-            while (timer < halfCycle)
+            while (timer < halfCycle && isHolding)
             {
                 timer += Time.deltaTime;
                 comboText.transform.localPosition = Vector3.Lerp(start, end, timer / halfCycle);
                 yield return null;
             }
 
-            //Move down
+            // Move down
             timer = 0f;
-            while (timer < halfCycle)
+            while (timer < halfCycle && isHolding)
             {
                 timer += Time.deltaTime;
                 comboText.transform.localPosition = Vector3.Lerp(end, start, timer / halfCycle);
                 yield return null;
             }
         }
+
+        // Reset position after stopping
+        if (comboText != null)
+            comboText.transform.localPosition = originalPos;
     }
 }

@@ -18,6 +18,10 @@ public class SongData
     public float bpm;
     public float speedMultiplier = 0.1f; // editor multiplier
     public string audioFile;
+    //Camera Colours
+    public int colourChangeBeats = 1;
+    public string[] availableColours;
+
     public NoteData[] notes;
 }
 
@@ -41,6 +45,9 @@ public class SongManager : MonoBehaviour
     public int beatSubdivision = 4; // must match EditorSongManager
     public float speedMultiplier = 0.1f; // must match EditorSongManager
 
+    [Header("References")]
+    public CameraColourManager cameraColourManager;
+
     private SongData songData;
     private List<GameObject> spawnedNotes = new List<GameObject>();
 
@@ -49,6 +56,10 @@ public class SongManager : MonoBehaviour
         LoadSong();
         SpawnAllNotes();
         StartCoroutine(StartAudioWithDelay());
+
+        //Initialize camera colours from JSON
+        if (cameraColourManager != null && songData.availableColours != null)
+            cameraColourManager.Initialize(songData.availableColours, songData.bpm, songData.colourChangeBeats, audioSource);
     }
 
     private void LoadSong()

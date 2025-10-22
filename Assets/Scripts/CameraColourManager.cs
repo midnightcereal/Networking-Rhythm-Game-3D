@@ -46,20 +46,28 @@ public class CameraColourManager : MonoBehaviour
 
         beatInterval = 60f / bpm;
         nextColourTime = 0f;
+
+        Debug.Log("Camera colour manager initialized");
     }
 
     private void Update()
     {
+        //Wait until the AudioSource is assigned and there are colours
         if (songAudio == null || availableColours.Count == 0)
             return;
 
-        //Time when switch to the next colour (based on audio)
+        //Wait until the song actually starts playing
+        if (!songAudio.isPlaying || songAudio.time <= 0f)
+            return;
+
+        //Change colour on the beat
         if (songAudio.time >= nextColourTime)
         {
             ChangeToNextColour();
             nextColourTime += beatInterval * colourChangeBeats;
         }
     }
+
 
     private void ChangeToNextColour()
     {

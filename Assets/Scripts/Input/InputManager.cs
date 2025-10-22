@@ -10,7 +10,7 @@ public class InputManager : MonoBehaviour
 
     [Header("Hit Settings")]
     public Transform hitLine;
-    public float hitTolerance = 0.5f;
+    public float hitTolerance = 0.15f;
 
     private bool[] laneHolding;
 

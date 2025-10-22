@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class Note : MonoBehaviour
 {
@@ -46,10 +47,11 @@ public class Note : MonoBehaviour
     {
         if (!audioSource) return;
 
-        songTimer += Time.deltaTime; // counts from game start
+        songTimer += Time.deltaTime;
 
         if (!isHit)
         {
+            // Move note down
             float y = (time - songTimer) / speedMultiplier + hitLine.position.y;
             transform.position = new Vector3(transform.position.x, y, transform.position.z);
 
@@ -58,6 +60,10 @@ public class Note : MonoBehaviour
         }
         else if (isHold && isHolding)
         {
+            // Rapid pulsing while held
+            float pulse = 0.03f * Mathf.Sin(Time.time * 50f);
+            transform.localScale = originalScale * 1.3f * (1f + pulse);
+
             holdTimer += Time.deltaTime;
             float remaining = Mathf.Clamp(holdDuration - holdTimer, 0f, holdDuration);
 
@@ -72,7 +78,6 @@ public class Note : MonoBehaviour
         }
     }
 
-
     public void Hit()
     {
         if (isHit) return;
@@ -81,11 +86,20 @@ public class Note : MonoBehaviour
         if (isHold)
         {
             isHolding = true;
-            transform.localScale = originalScale * 1.3f;
+
+            // Combo for hold start
+            ComboManager.Instance.AddCombo(true, this);
+
+            // Start combo text pulse
+            ComboManager.Instance.StartHoldPulse(this);
         }
         else
         {
-            StartCoroutine(ShrinkAndDestroy());
+            // Combo for tap
+            ComboManager.Instance.AddCombo(false, this);
+
+            // Pop note animation
+            StartCoroutine(PopAndDestroy());
         }
     }
 
@@ -93,10 +107,21 @@ public class Note : MonoBehaviour
     {
         if (!isHold || !isHolding) return;
 
-        if (holdTimer >= holdDuration)
-            HoldComplete();
-        else
+        // Released too early (before the hold is done)
+        if (holdTimer < holdDuration)
+        {
+            // Reset combo on early release
+            ComboManager.Instance.ResetCombo();
             Miss();
+        }
+        else
+        {
+            HoldComplete();
+        }
+
+        // Stop combo text pulse immediately
+        ComboManager.Instance.StopHoldPulse(this);
+        transform.localScale = originalScale;
     }
 
     private void HoldComplete()
@@ -106,19 +131,27 @@ public class Note : MonoBehaviour
         holdCompleted = true;
         isHolding = false;
 
-        StartCoroutine(ShrinkAndDestroy());
+        // Extra combo for completing hold
+        ComboManager.Instance.AddCombo(true, this);
+
+        // Pop note on hold completion
+        StartCoroutine(PopAndDestroy());
+
+        // Stop combo text pulse
+        ComboManager.Instance.StopHoldPulse(this);
     }
 
-    private System.Collections.IEnumerator ShrinkAndDestroy()
+    private IEnumerator PopAndDestroy()
     {
-        float duration = 0.05f;
+        float duration = 0.035f;
         float timer = 0f;
         Vector3 start = transform.localScale;
+        Vector3 target = start * 2f;
 
         while (timer < duration)
         {
             timer += Time.deltaTime;
-            transform.localScale = Vector3.Lerp(start, Vector3.zero, timer / duration);
+            transform.localScale = Vector3.Lerp(start, target, timer / duration);
             yield return null;
         }
 
@@ -127,7 +160,7 @@ public class Note : MonoBehaviour
 
     private void Miss()
     {
-        Debug.Log("Miss!");
+        transform.localScale = originalScale;
         Destroy(gameObject);
     }
 }
