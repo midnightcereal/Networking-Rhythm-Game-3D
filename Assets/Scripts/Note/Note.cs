@@ -19,6 +19,7 @@ public class Note : MonoBehaviour
     private Vector3 originalScale;
 
     [HideInInspector] public float speedMultiplier = 0.1f; // set from SongManager
+    private float songTimer = 0f;
     private AudioSource audioSource;
 
     private void Start()
@@ -45,11 +46,11 @@ public class Note : MonoBehaviour
     {
         if (!audioSource) return;
 
+        songTimer += Time.deltaTime; // counts from game start
+
         if (!isHit)
         {
-            // Exact editor-style position calculation
-            float songTime = audioSource.time;
-            float y = (time - songTime) / speedMultiplier + hitLine.position.y;
+            float y = (time - songTimer) / speedMultiplier + hitLine.position.y;
             transform.position = new Vector3(transform.position.x, y, transform.position.z);
 
             if (y <= hitLine.position.y - 0.1f)
@@ -70,6 +71,7 @@ public class Note : MonoBehaviour
                 HoldComplete();
         }
     }
+
 
     public void Hit()
     {

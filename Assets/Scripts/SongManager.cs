@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -29,6 +30,8 @@ public class SongManager : MonoBehaviour
     public Transform hitLine;
 
     [Header("Audio & Timing")]
+    public float manualOffset = 1.0f;
+    public float preRollSeconds = 3f;
     public string songJsonFile = "TestSong"; // from Resources/Songs
     public AudioSource audioSource;
 
@@ -45,7 +48,7 @@ public class SongManager : MonoBehaviour
     {
         LoadSong();
         SpawnAllNotes();
-        PlayAudio();
+        StartCoroutine(StartAudioWithDelay());
     }
 
     private void LoadSong()
@@ -77,16 +80,12 @@ public class SongManager : MonoBehaviour
     {
         if (notePrefab == null || songData == null || songData.notes == null) return;
 
-        // calculate falling speed exactly like in editor
-        float noteSpeed = (60f / bpm) / (beatSubdivision / 4f) / segmentHeight * speedMultiplier;
-        // or simpler: speed = segmentHeight / (time per segment)
-        // here we just use the same speedMultiplier as editor for consistency
-
-        float manualOffset = 1f; // offset in seconds to fix the sync between editor and game scenes
-
         foreach (var n in songData.notes)
         {
-            Vector3 pos = new Vector3(laneXPositions[n.lane], n.positionY, laneZ);
+            //Spawn the note above the hit line so it starts falling immediately
+            float spawnY = hitLine.position.y + preRollSeconds * speedMultiplier;
+
+            Vector3 pos = new Vector3(laneXPositions[n.lane], spawnY, laneZ);
             GameObject noteObj = Instantiate(notePrefab, pos, Quaternion.identity);
             spawnedNotes.Add(noteObj);
 
@@ -96,18 +95,21 @@ public class SongManager : MonoBehaviour
                 noteScript.isHold = n.type == "hold";
                 noteScript.holdDuration = n.holdDuration;
                 noteScript.hitLine = hitLine;
-                noteScript.time = (n.positionY * speedMultiplier) - manualOffset; // match editor-style timing
-                noteScript.speedMultiplier = speedMultiplier;    // pass the multiplier
+
+                //time logic for syncing
+                noteScript.time = (n.positionY * speedMultiplier);
+                noteScript.speedMultiplier = speedMultiplier;
             }
         }
     }
 
-    private void PlayAudio()
+    private IEnumerator StartAudioWithDelay()
     {
+        // Wait for the absolute value of negative preRollSeconds
+        yield return new WaitForSeconds(Mathf.Abs(preRollSeconds));
+
         if (audioSource != null && audioSource.clip != null)
-        {
-            audioSource.time = 0f;
             audioSource.Play();
-        }
     }
+
 }
