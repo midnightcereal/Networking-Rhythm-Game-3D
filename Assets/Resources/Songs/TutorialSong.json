@@ -1,7 +1,7 @@
 {
     "songName": "TestSong",
     "bpm": 178.0,
-    "speedMultiplier": 0.10000001639127732,
+    "speedMultiplier": 0.1,
     "audioFile": "digicore_tutorial",
     "colourChangeBeats": 1,
     "availableColours": [

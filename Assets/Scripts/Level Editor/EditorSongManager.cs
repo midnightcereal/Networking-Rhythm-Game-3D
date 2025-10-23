@@ -28,6 +28,8 @@ public class EditorSongData
 
 public class EditorSongManager : MonoBehaviour
 {
+    public static EditorSongManager Instance;
+
     [Header("Editor Tools")]
     public bool dragToolActive = false;
     private bool snapSelectedNotes = true;
@@ -95,6 +97,11 @@ public class EditorSongManager : MonoBehaviour
     private GameObject currentPlayStartBar = null;
     private float? playStartY = null;
     private float storedBarY = 0f;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     private void Start()
     {
@@ -797,6 +804,12 @@ public class EditorSongManager : MonoBehaviour
         }
 
         notes.Add(noteScript);
+
+        //Refresh autoplay
+        EditorAutoPlayer autoPlayer = FindObjectOfType<EditorAutoPlayer>();
+        if (autoPlayer != null)
+            autoPlayer.RefreshNotes();
+
         return noteScript;
     }
 
@@ -918,6 +931,11 @@ public class EditorSongManager : MonoBehaviour
             notes.Add(note);
         }
 
+        //Refresh autoplay
+        EditorAutoPlayer autoPlayer = FindObjectOfType<EditorAutoPlayer>();
+        if (autoPlayer != null)
+            autoPlayer.RefreshNotes();
+
         Debug.Log($"Loaded song: {songData.songName} | Colours preserved: {(songData.availableColours != null ? songData.availableColours.Length : 0)}");
     }
 
@@ -950,28 +968,6 @@ public class EditorSongManager : MonoBehaviour
         Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, trackStartY, Camera.main.transform.position.z);
 
         Debug.Log($"> Playing from {startTime:F2}s (bar Y={playStartY})");
-    }
-
-    private IEnumerator DelayedPlay(float startTime, float delay)
-    {
-        yield return new WaitForSeconds(delay);
-        audioSource.time = startTime;
-        audioSource.Play();
-    }
-
-    private IEnumerator MoveCameraToDefault()
-    {
-        Transform cam = Camera.main.transform;
-        Vector3 startPos = cam.position;
-        Vector3 targetPos = new Vector3(startPos.x, defaultCameraY, startPos.z);
-        float t = 0f;
-
-        while (t < 1f)
-        {
-            t += Time.deltaTime * cameraReturnSpeed;
-            cam.position = Vector3.Lerp(startPos, targetPos, t);
-            yield return null;
-        }
     }
 
     public void PauseAudio()
