@@ -18,13 +18,30 @@ public class EditorSongData
 {
     public string songName;
     public float bpm;
-    public float speedMultiplier = 0.1f;
+    public float speedMultiplier;
     public string audioFile;
+    public int colourChangeBeats;
+    public string[] availableColours;
     public EditorNoteData[] notes;
 }
 
+
 public class EditorSongManager : MonoBehaviour
 {
+    [Header("Editor Tools")]
+    public bool dragToolActive = false;
+    private bool snapSelectedNotes = true;
+    private bool isSelecting = false;
+    private bool isDraggingNotes = false;
+    private Vector3 lastMouseWorldPos;
+    private Vector2 selectionStart;
+    private readonly List<EditorNote> selectedNotes = new List<EditorNote>();
+
+    [Header("Selection UI")]
+    public RectTransform selectionBox;
+    private Vector2 selectionBoxStart;
+    private Vector2 selectionBoxEnd;
+
     [Header("Editor Settings")]
     public GameObject notePrefab;
     public float speedMultiplier = 0.1f;
@@ -172,23 +189,53 @@ public class EditorSongManager : MonoBehaviour
     private void Update()
     {
         HandleMouseInput();
+        HandleKeyShortcuts();
         HandleScroll();
         HandleSubdivisionHotkeys();
         UpdateSegmentScroll();
         UpdateSegmentRebuild();
     }
 
-
+    #region Inputs
     private void HandleMouseInput()
     {
         Vector3 mousePos = Input.mousePosition;
 
-        if (Input.GetMouseButtonDown(2)) // middle mouse
+        if (Input.GetMouseButtonUp(0))
+        {
+            if (isSelecting)
+            {
+                isSelecting = false;
+                if (selectionBox != null)
+                    selectionBox.gameObject.SetActive(false);
+            }
+
+            if (isDraggingNotes)
+            {
+                foreach (var n in selectedNotes)
+                {
+                    n.isDragging = false;
+
+                    //Update time based on new Y position so it stays there
+                    n.time = n.transform.position.y * speedMultiplier;
+
+                    //Reset colour back to white when drag ends
+                    Renderer rend = n.GetComponent<Renderer>();
+                    if (rend != null)
+                        rend.sharedMaterial.color = Color.white;
+                }
+
+                isDraggingNotes = false;
+            }
+        }
+
+        //Place start bar (middle click)
+        if (Input.GetMouseButtonDown(2))
         {
             PlacePlayStartBar();
         }
 
-        //Delete mode
+        //Delete note (right click)
         if (Input.GetMouseButtonDown(1))
         {
             Ray ray = Camera.main.ScreenPointToRay(mousePos);
@@ -204,57 +251,263 @@ public class EditorSongManager : MonoBehaviour
             return;
         }
 
-        //Place notes
+        //Drag tool active
+        if (dragToolActive)
+        {
+            bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+            //Start selection box
+            if (Input.GetMouseButtonDown(0))
+            {
+                Ray ray = Camera.main.ScreenPointToRay(mousePos);
+                if (Physics.Raycast(ray, out RaycastHit hit))
+                {
+                    EditorNote note = hit.collider.GetComponent<EditorNote>();
+                    if (note != null && selectedNotes.Contains(note))
+                    {
+                        //Drag selected notes
+                        isDraggingNotes = true;
+                        lastMouseWorldPos = GetMouseWorldPosition(mousePos);
+
+                        foreach (var n in selectedNotes)
+                            n.isDragging = true;
+                    }
+                    else
+                    {
+                        //Start a new selection box
+                        isSelecting = true;
+                        selectionStart = mousePos;
+                        if (selectionBox != null)
+                            selectionBox.gameObject.SetActive(true);
+                    }
+                }
+                else
+                {
+                    //Clicked empty space -> start selection box
+                    isSelecting = true;
+                    selectionStart = mousePos;
+                    if (selectionBox != null)
+                        selectionBox.gameObject.SetActive(true);
+                }
+            }
+
+            //Update selection box
+            if (isSelecting && Input.GetMouseButton(0))
+            {
+                UpdateSelectionBox(mousePos);
+                SelectNotesWithinBox(selectionStart, mousePos);
+            }
+
+            //Drag selected notes
+            if (isDraggingNotes && selectedNotes.Count > 0 && Input.GetMouseButton(0))
+            {
+                Vector3 mouseWorldPos = GetMouseWorldPosition(mousePos);
+                Vector3 delta = mouseWorldPos - lastMouseWorldPos;
+
+                foreach (var n in selectedNotes)
+                {
+                    Vector3 newPos = n.transform.position + delta;
+
+                    //Snap if shift is NOT held
+                    if (!shiftHeld)
+                        newPos = SnapToGrid(newPos);
+
+                    n.transform.position = newPos;
+                }
+
+                lastMouseWorldPos = mouseWorldPos;
+            }
+
+            //End selection or drag
+            if (Input.GetMouseButtonUp(0))
+            {
+                if (isSelecting)
+                {
+                    isSelecting = false;
+                    if (selectionBox != null)
+                        selectionBox.gameObject.SetActive(false);
+                }
+
+                if (isDraggingNotes)
+                {
+                    foreach (var n in selectedNotes)
+                        n.isDragging = false;
+
+                    isDraggingNotes = false;
+                }
+            }
+
+            return;
+        }
+
+        //Placement mode (tap or hold)
         if ((placingTap || placingHold) && Input.GetMouseButtonDown(0))
         {
-            if (placingTap) PlaceNoteOnTrack(mousePos, false);
+            if (placingTap)
+            {
+                PlaceNoteOnTrack(mousePos, false);
+            }
             else if (placingHold)
             {
+                //Start placing hold note
                 currentHoldNote = PlaceNoteOnTrack(mousePos, true);
-                if (currentHoldNote != null) currentHoldNote.isDragging = true;
+                if (currentHoldNote != null)
+                    currentHoldNote.isDragging = true; //enable drag to draw
             }
         }
 
-        // Drag hold note
+        //Dragging hold note to set length
         if (currentHoldNote != null && currentHoldNote.isDragging && Input.GetMouseButton(0))
         {
-            Ray ray = Camera.main.ScreenPointToRay(mousePos);
-            Plane plane = new Plane(Vector3.forward, new Vector3(0f, 0f, laneZ));
-            if (plane.Raycast(ray, out float enter))
+            Vector3 mouseWorldPos = GetMouseWorldPosition(mousePos);
+            float startY = currentHoldNote.transform.position.y;
+            float dragY = mouseWorldPos.y;
+
+            bool shiftHeld = Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift);
+
+            //Snap if shift is NOT held
+            if (!shiftHeld)
             {
-                Vector3 hit = ray.GetPoint(enter);
-
-                // Snap drag position to the top of the next segment above the note
-                float noteY = currentHoldNote.transform.position.y; // note bottom
-                int currentSegment = Mathf.FloorToInt((noteY - trackStartY) / segmentHeight);
-                float nextSegmentTop = trackStartY + (currentSegment + 1) * segmentHeight;
-
-                // Clamp drag to be at least one segment
-                float snappedY = Mathf.Max(nextSegmentTop, hit.y);
-
-                // Compute hold line length
-                float length = snappedY - noteY;
-                currentHoldNote.holdDuration = length * speedMultiplier;
-                currentHoldNote.UpdateHoldVisual(length);
+                int startSegment = Mathf.FloorToInt((startY - trackStartY) / segmentHeight);
+                int endSegment = Mathf.CeilToInt((dragY - trackStartY) / segmentHeight);
+                dragY = trackStartY + Mathf.Max(startSegment + 1, endSegment) * segmentHeight;
             }
+
+            float holdLength = Mathf.Max(0.01f, dragY - startY);
+            currentHoldNote.holdDuration = holdLength * speedMultiplier;
+            currentHoldNote.UpdateHoldVisual(holdLength);
+        }
+
+        //Release hold note
+        if (currentHoldNote != null && Input.GetMouseButtonUp(0))
+        {
+            currentHoldNote.isDragging = false;
+            currentHoldNote = null;
         }
     }
 
+    private void HandleKeyShortcuts()
+    {
+        // --- Toggle note placement modes ---
+        if (Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            placingTap = true;
+            placingHold = false;
+            dragToolActive = false;
+            Debug.Log("Tap placement mode active");
+        }
 
+        if (Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            placingTap = false;
+            placingHold = true;
+            dragToolActive = false;
+            Debug.Log("Hold placement mode active");
+        }
 
+        // --- Toggle drag tool ---
+        if (Input.GetKeyDown(KeyCode.M))
+        {
+            dragToolActive = !dragToolActive;
+            placingTap = false;
+            placingHold = false;
 
+            if (dragToolActive)
+                Debug.Log("Drag tool activated");
+            else
+                Debug.Log("Drag tool deactivated");
 
+            // Clear current selection when disabling
+            if (!dragToolActive)
+                selectedNotes.Clear();
+        }
 
+        // --- Deselect all ---
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            selectedNotes.Clear();
+            dragToolActive = false;
+            placingTap = false;
+            placingHold = false;
+            Debug.Log("All tools cleared");
+        }
+    }
+    #endregion
 
+    #region Shortcut Functions
+    private Vector3 SnapToGrid(Vector3 pos)
+    {
+        //Snap X to nearest lane
+        float closestX = laneXPositions[0];
+        float minDist = Mathf.Abs(pos.x - closestX);
+        for (int i = 1; i < laneXPositions.Length; i++)
+        {
+            float d = Mathf.Abs(pos.x - laneXPositions[i]);
+            if (d < minDist)
+            {
+                minDist = d;
+                closestX = laneXPositions[i];
+            }
+        }
 
+        //Snap Y to nearest segment
+        float relativeY = pos.y - trackStartY;
+        int nearestSegment = Mathf.RoundToInt(relativeY / segmentHeight);
+        float snappedY = trackStartY + nearestSegment * segmentHeight;
 
-    //    // Release hold
-    //    if (currentHoldNote != null && Input.GetMouseButtonUp(0))
-    //    {
-    //        currentHoldNote.isDragging = false;
-    //        currentHoldNote = null;
-    //    }
-    //}
+        return new Vector3(closestX, snappedY, laneZ);
+    }
+
+    private Vector3 GetMouseWorldPosition(Vector3 mousePos)
+    {
+        Ray ray = Camera.main.ScreenPointToRay(mousePos);
+        Plane plane = new Plane(Vector3.forward, new Vector3(0f, 0f, laneZ));
+        if (plane.Raycast(ray, out float enter))
+            return ray.GetPoint(enter);
+        return Vector3.zero;
+    }
+
+    private void UpdateSelectionBox(Vector3 currentMousePos)
+    {
+        Vector2 start = selectionStart;
+        Vector2 end = currentMousePos;
+        Vector2 center = (start + end) / 2f;
+        Vector2 size = new Vector2(Mathf.Abs(start.x - end.x), Mathf.Abs(start.y - end.y));
+
+        selectionBox.position = center;
+        selectionBox.sizeDelta = size;
+    }
+    private void SelectNotesWithinBox(Vector2 start, Vector2 end)
+    {
+        Rect rect = new(
+            Mathf.Min(start.x, end.x),
+            Mathf.Min(start.y, end.y),
+            Mathf.Abs(end.x - start.x),
+            Mathf.Abs(end.y - start.y)
+        );
+
+        selectedNotes.Clear();
+
+        foreach (var note in notes)
+        {
+            Vector3 screenPos = Camera.main.WorldToScreenPoint(note.transform.position);
+            if (rect.Contains(screenPos))
+                selectedNotes.Add(note);
+        }
+
+        HighlightSelectedNotes();
+    }
+
+    private void HighlightSelectedNotes()
+    {
+        foreach (var note in FindObjectsOfType<EditorNote>())
+        {
+            var rend = note.GetComponent<Renderer>();
+            if (rend != null)
+                rend.material.color = selectedNotes.Contains(note) ? Color.yellow : Color.white;
+        }
+    }
+    #endregion
 
     #region Track Movement
     private void HandleScroll()
@@ -527,10 +780,14 @@ public class EditorSongManager : MonoBehaviour
             Debug.LogError("The notePrefab is missing the 'EditorNote' script!");
             return null;
         }
+        else
+        {
+            Debug.Log("Retrieved note script");
+        }
 
         noteScript.isHold = hold;
         noteScript.lane = laneIndex;
-        noteScript.time = hit.y * speedMultiplier;
+        noteScript.time = (hit.y * speedMultiplier) + audioSource.time;
 
         if (hold)
         {
@@ -549,6 +806,15 @@ public class EditorSongManager : MonoBehaviour
         string path = EditorUtility.SaveFilePanel("Save JSON", "Assets/Resources/Songs", defaultSongName + ".json", "json");
         if (string.IsNullOrEmpty(path)) return;
 
+        // Preserve existing JSON fields if they exist
+        EditorSongData existingData = null;
+        if (File.Exists(path))
+        {
+            string existingJson = File.ReadAllText(path);
+            existingData = JsonUtility.FromJson<EditorSongData>(existingJson);
+        }
+
+        //Collect note data
         List<EditorNoteData> noteDataList = new List<EditorNoteData>();
         foreach (var n in notes)
         {
@@ -561,6 +827,7 @@ public class EditorSongManager : MonoBehaviour
             });
         }
 
+        //Create new song data
         EditorSongData songData = new EditorSongData
         {
             songName = defaultSongName,
@@ -570,8 +837,16 @@ public class EditorSongManager : MonoBehaviour
             notes = noteDataList.ToArray()
         };
 
+        //Preserve existing colour fields if available
+        if (existingData != null)
+        {
+            songData.colourChangeBeats = existingData.colourChangeBeats;
+            songData.availableColours = existingData.availableColours;
+        }
+
+        //Write to file
         File.WriteAllText(path, JsonUtility.ToJson(songData, true));
-        Debug.Log("Saved song JSON: " + path);
+        Debug.Log($"Saved song JSON: {path}");
     }
 
     public void LoadJSON()
@@ -579,24 +854,41 @@ public class EditorSongManager : MonoBehaviour
         string path = EditorUtility.OpenFilePanel("Load JSON", "Assets/Resources/Songs", "json");
         if (string.IsNullOrEmpty(path)) return;
 
+        //Ensure AudioSource exists
+        if (audioSource == null)
+        {
+            audioSource = GetComponent<AudioSource>();
+            if (audioSource == null)
+            {
+                audioSource = gameObject.AddComponent<AudioSource>();
+                audioSource.playOnAwake = false;
+                audioSource.loop = false;
+                Debug.Log("Created new AudioSource on Editor Manager");
+            }
+        }
+
+        //Read JSON
         string jsonText = File.ReadAllText(path);
         EditorSongData songData = JsonUtility.FromJson<EditorSongData>(jsonText);
+        if (songData == null)
+        {
+            Debug.LogError("Failed to parse JSON file!");
+            return;
+        }
 
-        bpm = songData.bpm;
+        //Apply basic fields
         songName = songData.songName;
+        bpm = songData.bpm;
         speedMultiplier = songData.speedMultiplier;
+
         UpdateSegmentHeight();
         UpdateSegmentTexts();
 
-        //Ensure we have an AudioSource
-        if (!audioSource) audioSource = GetComponent<AudioSource>();
-        if (!audioSource) audioSource = gameObject.AddComponent<AudioSource>();
-
-        //Try to load the clip from Resources/Songs/{audioFile}
+        //Load audio
         if (!string.IsNullOrEmpty(songData.audioFile))
         {
             AudioClip clip = Resources.Load<AudioClip>($"Songs/{songData.audioFile}");
-            if (clip)
+            if (clip != null)
             {
                 audioSource.clip = clip;
                 Debug.Log($"Loaded audio clip: {songData.audioFile}");
@@ -607,10 +899,12 @@ public class EditorSongManager : MonoBehaviour
             }
         }
 
+        //Clear old notes
         foreach (var n in notes)
             if (n != null) DestroyImmediate(n.gameObject);
         notes.Clear();
 
+        //Instantiate loaded notes
         foreach (var nData in songData.notes)
         {
             Vector3 pos = new Vector3(laneXPositions[nData.lane], nData.positionY, laneZ);
@@ -619,12 +913,14 @@ public class EditorSongManager : MonoBehaviour
             note.lane = nData.lane;
             note.time = nData.positionY * speedMultiplier;
             note.holdDuration = nData.holdDuration;
-            if (note.isHold) note.UpdateHoldVisual(nData.holdDuration / speedMultiplier);
+            if (note.isHold)
+                note.UpdateHoldVisual(nData.holdDuration / speedMultiplier);
             notes.Add(note);
         }
 
-        Debug.Log($"Loaded song: {songName} | BPM: {bpm} | Multiplier: {speedMultiplier}");
+        Debug.Log($"Loaded song: {songData.songName} | Colours preserved: {(songData.availableColours != null ? songData.availableColours.Length : 0)}");
     }
+
     #endregion
 
     #region Playback

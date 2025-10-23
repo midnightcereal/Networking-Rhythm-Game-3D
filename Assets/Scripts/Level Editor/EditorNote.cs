@@ -26,6 +26,8 @@ public class EditorNote : MonoBehaviour
     {
         if (manager == null || manager.audioSource == null || manager.audioSource.clip == null) return;
 
+        if (isDragging) return; //skip updating while dragging
+
         float songTime = manager.audioSource.time; // seconds into the song
         float y = (time - songTime) / manager.speedMultiplier;
         transform.position = new Vector3(transform.position.x, y, transform.position.z);
