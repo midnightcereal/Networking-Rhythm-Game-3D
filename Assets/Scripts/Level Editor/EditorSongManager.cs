@@ -766,20 +766,48 @@ public class EditorSongManager : MonoBehaviour
         int nearestSegment = Mathf.RoundToInt((hit.y - trackStartY) / segmentHeight);
 
         // Check for existing note in the same lane & segment
-        foreach (var n in notes)
+        //foreach (var n in notes)
+        //{
+        //    if (n == null) continue;
+        //    int nSegment = Mathf.RoundToInt((n.transform.position.y - trackStartY) / segmentHeight);
+        //    if (nSegment == nearestSegment && n.lane == laneIndex)
+        //    {
+        //        Debug.Log("Segment already has a note on this lane!");
+        //        return null;
+        //    }
+        //}
+
+        //Snap Y unless shift is held or C is pressed for marker snapping
+        if (Input.GetKey(KeyCode.C))
         {
-            if (n == null) continue;
-            int nSegment = Mathf.RoundToInt((n.transform.position.y - trackStartY) / segmentHeight);
-            if (nSegment == nearestSegment && n.lane == laneIndex)
+            // Try to snap to nearest beat marker
+            BeatMarkerVisualizer vis = FindObjectOfType<BeatMarkerVisualizer>();
+            if (vis != null)
             {
-                Debug.Log("Segment already has a note on this lane!");
-                return null;
+                float nearestY = float.MaxValue;
+                float minDist = float.MaxValue;
+
+                foreach (var marker in vis.GetActiveMarkers())
+                {
+                    if (marker == null) continue;
+                    float dist = Mathf.Abs(hit.y - marker.transform.position.y);
+                    if (dist < minDist)
+                    {
+                        minDist = dist;
+                        nearestY = marker.transform.position.y;
+                    }
+                }
+
+                if (nearestY != float.MaxValue)
+                {
+                    hit.y = nearestY;
+                    Debug.Log($"Snapped to beat marker at Y={nearestY:F3}");
+                }
             }
         }
-
-        // Snap Y unless shift is held
-        if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
+        else if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
         {
+            // Regular segment snapping
             hit.y = trackStartY + nearestSegment * segmentHeight;
         }
 
@@ -859,7 +887,7 @@ public class EditorSongManager : MonoBehaviour
             songName = defaultSongName,
             bpm = bpmInput,
             speedMultiplier = speedMultiplier,
-            audioFile = defaultAudioFile,
+            audioFile = songName,
             notes = noteDataList.ToArray()
         };
 
@@ -1033,8 +1061,8 @@ public class EditorSongManager : MonoBehaviour
         }
         playStartY = null;
 
-        Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, trackStartY, Camera.main.transform.position.z);
-        Camera.main.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+        //Camera.main.transform.position = new Vector3(Camera.main.transform.position.x, trackStartY, Camera.main.transform.position.z);
+        //Camera.main.transform.rotation = Quaternion.Euler(0f, 0f, 0f);
 
         ResetSegmentTextPositions();
 

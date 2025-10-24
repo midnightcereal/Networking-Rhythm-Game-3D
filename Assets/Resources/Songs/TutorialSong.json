@@ -1,5 +1,5 @@
 {
-    "songName": "TestSong",
+    "songName": "kitsune",
     "bpm": 178.0,
     "speedMultiplier": 0.10000000149011612,
     "audioFile": "kitsune",
@@ -15,18 +15,6 @@
         "6C80FF"
     ],
     "notes": [
-        {
-            "positionY": 112.14530181884766,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 116.19022369384766,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
         {
             "positionY": 12.369999885559082,
             "lane": 3,
@@ -64,12 +52,6 @@
             "holdDuration": 0.0
         },
         {
-            "positionY": 224.671630859375,
-            "lane": 1,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
             "positionY": 273.9430847167969,
             "lane": 1,
             "type": "tap",
@@ -100,12 +82,6 @@
             "holdDuration": 1.3244965076446534
         },
         {
-            "positionY": 85.17899322509766,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
             "positionY": 327.8756408691406,
             "lane": 0,
             "type": "tap",
@@ -126,24 +102,6 @@
         {
             "positionY": 170.87730407714845,
             "lane": 0,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 29.83336639404297,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 40.98080825805664,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 94.48384857177735,
-            "lane": 2,
             "type": "tap",
             "holdDuration": 0.0
         },
@@ -184,18 +142,6 @@
             "holdDuration": 0.8851653933525086
         },
         {
-            "positionY": 125.62843322753906,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 139.111572265625,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
             "positionY": 283.7757263183594,
             "lane": 1,
             "type": "hold",
@@ -214,200 +160,8 @@
             "holdDuration": 0.7744842767715454
         },
         {
-            "positionY": 58.21269607543945,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 63.60595703125,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 68.99921417236328,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
             "positionY": 132.55885314941407,
             "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 140.6733856201172,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 143.07098388671876,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 144.5048370361328,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 148.82823181152345,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 151.4098663330078,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 156.654296875,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 128.32505798339845,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 163.38124084472657,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 167.37327575683595,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 168.77450561523438,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 169.95489501953126,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 171.47113037109376,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 179.56101989746095,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 182.2576446533203,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 186.41165161132813,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 193.04415893554688,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 194.402587890625,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 196.98416137695313,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 202.6406707763672,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 205.0987091064453,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 210.59170532226563,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 217.31382751464845,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 221.24819946289063,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 222.7070770263672,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 224.13673400878907,
-            "lane": 2,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 225.40371704101563,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 337.52410888671877,
-            "lane": 1,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 354.48858642578127,
-            "lane": 1,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 364.323486328125,
-            "lane": 1,
             "type": "tap",
             "holdDuration": 0.0
         },
@@ -418,14 +172,662 @@
             "holdDuration": 0.0
         },
         {
-            "positionY": 391.4951171875,
+            "positionY": 364.3637390136719,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 1.2969146966934205
+        },
+        {
+            "positionY": 354.56011962890627,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 0.7499054074287415
+        },
+        {
+            "positionY": 337.4682312011719,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 1.3031647205352784
+        },
+        {
+            "positionY": 386.7868957519531,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 391.3817443847656,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 1.2784607410430909
+        },
+        {
+            "positionY": 407.91961669921877,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 0.7990661859512329
+        },
+        {
+            "positionY": 418.0613708496094,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 1.30914306640625
+        },
+        {
+            "positionY": 434.9775085449219,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 439.70892333984377,
             "lane": 1,
             "type": "tap",
             "holdDuration": 0.0
         },
         {
-            "positionY": 386.8858642578125,
+            "positionY": 445.3180847167969,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 1.2722076177597047
+        },
+        {
+            "positionY": 461.83642578125,
             "lane": 1,
+            "type": "hold",
+            "holdDuration": 0.8175323605537415
+        },
+        {
+            "positionY": 472.5491027832031,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 1.229284644126892
+        },
+        {
+            "positionY": 488.5106506347656,
+            "lane": 1,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 493.6739501953125,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 498.56134033203127,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 1.303167700767517
+        },
+        {
+            "positionY": 515.5596313476563,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 0.872937023639679
+        },
+        {
+            "positionY": 526.7639770507813,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 1.241510033607483
+        },
+        {
+            "positionY": 542.660400390625,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 547.5792236328125,
+            "lane": 1,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 553.0831298828125,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 1.296905517578125
+        },
+        {
+            "positionY": 569.9591674804688,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 0.829754650592804
+        },
+        {
+            "positionY": 580.6522216796875,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 1.2108032703399659
+        },
+        {
+            "positionY": 596.44873046875,
+            "lane": 1,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 601.7940063476563,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 606.9855346679688,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 1.3216370344161988
+        },
+        {
+            "positionY": 624.1116333007813,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 0.768109142780304
+        },
+        {
+            "positionY": 633.9125366210938,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 1.272192358970642
+        },
+        {
+            "positionY": 650.4617919921875,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 655.318115234375,
+            "lane": 1,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 661.0639038085938,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 1.2906677722930909
+        },
+        {
+            "positionY": 677.6900634765625,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 0.830047607421875
+        },
+        {
+            "positionY": 688.4769287109375,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 1.222753882408142
+        },
+        {
+            "positionY": 704.4241943359375,
+            "lane": 1,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 709.095703125,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 714.596923828125,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 1.27276611328125
+        },
+        {
+            "positionY": 731.0440673828125,
+            "lane": 0,
+            "type": "hold",
+            "holdDuration": 0.83599853515625
+        },
+        {
+            "positionY": 741.8021240234375,
+            "lane": 1,
+            "type": "hold",
+            "holdDuration": 1.278173804283142
+        },
+        {
+            "positionY": 758.1527709960938,
+            "lane": 0,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 763.2537231445313,
+            "lane": 1,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 145.19256591796876,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 212.69757080078126,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 222.7157745361328,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 224.6067657470703,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 111.38662719726563,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 126.90609741210938,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 129.3647918701172,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 141.21151733398438,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 143.11683654785157,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 139.4909210205078,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 149.78671264648438,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 153.1668243408203,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 158.39186096191407,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 164.5701141357422,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 168.2578582763672,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 169.97914123535157,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 171.94554138183595,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 173.6511688232422,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 179.98231506347657,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 183.34814453125,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 186.8518524169922,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 193.65760803222657,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 195.18055725097657,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 197.0858917236328,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 198.86761474609376,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 203.64581298828126,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 207.2731170654297,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 218.67364501953126,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 226.28062438964845,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 228.12481689453126,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 224.55996704101563,
+            "lane": 1,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 229.54324340820313,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 232.9566192626953,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 236.36976623535157,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 240.20989990234376,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 243.40989685058595,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 246.60989379882813,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 250.02328491210938,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 253.43643188476563,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 256.6364440917969,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 260.0498352050781,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 263.46319580078127,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 266.6631774902344,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 270.2899475097656,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 273.2765808105469,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 276.68994140625,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 280.3164978027344,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 283.5164794921875,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 286.92987060546877,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 290.34326171875,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 293.7566223144531,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 296.95660400390627,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 300.1566162109375,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 303.78314208984377,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 307.196533203125,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 310.3965148925781,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 313.5965270996094,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 317.4364318847656,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 321.0632019042969,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 324.26318359375,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 327.67657470703127,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 330.8765869140625,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 334.2899169921875,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 30.50310516357422,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 40.52986526489258,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 57.169769287109378,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 62.28995132446289,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 67.62328338623047,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 84.04981231689453,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 95.14324188232422,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 116.68994903564453,
+            "lane": 2,
             "type": "tap",
             "holdDuration": 0.0
         }

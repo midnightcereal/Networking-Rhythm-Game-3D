@@ -28,6 +28,12 @@ public class BeatMarkerVisualizer : MonoBehaviour
             LoadAndDisplayBeats();
         }
 
+        //Press J to delete beat markers JSON and reset
+        if (Input.GetKeyDown(KeyCode.J))
+        {
+            DeleteBeatMarkers();
+        }
+
         UpdateMarkerPositions();
     }
 
@@ -76,6 +82,26 @@ public class BeatMarkerVisualizer : MonoBehaviour
         Debug.Log($"[BeatMarkerVisualizer] Spawned {data.beatTimes.Length} beat markers");
     }
 
+    private void DeleteBeatMarkers()
+    {
+        //Delete the JSON file if it exists
+        if (File.Exists(loadPath))
+        {
+            File.Delete(loadPath);
+            Debug.Log("[BeatMarkerVisualizer] Deleted beat_markers.json");
+        }
+        else
+        {
+            Debug.LogWarning("[BeatMarkerVisualizer] No beat_markers.json found to delete");
+        }
+
+        //Clear any currently spawned markers
+        foreach (var obj in activeMarkers)
+            if (obj != null) DestroyImmediate(obj);
+
+        activeMarkers.Clear();
+        markerTimes.Clear();
+    }
 
     private void UpdateMarkerPositions()
     {
@@ -118,5 +144,14 @@ public class BeatMarkerVisualizer : MonoBehaviour
             float y = trackStartY + (beatTime / speedMultiplier);
             marker.transform.position = new Vector3(laneX, y, 9.5f);
         }
+    }
+
+    /// <summary>
+    /// Accessed by editor song manager for beat snapping
+    /// </summary>
+    /// <returns></returns>
+    public List<GameObject> GetActiveMarkers()
+    {
+        return activeMarkers;
     }
 }

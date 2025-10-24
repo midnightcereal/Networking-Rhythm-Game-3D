@@ -1198,7 +1198,7 @@ MonoBehaviour:
     type: 3}
   runtimeSegments: []
   trackContainer: {fileID: 0}
-  scrollSpeed: 25
+  scrollSpeed: 65
   cameraReturnSpeed: 5
   isPlayingFromCamera: 0
   laneXPositions:

@@ -31,15 +31,21 @@ public class BeatMarkerRecorder : MonoBehaviour
         if (!audioSource.isPlaying)
             return;
 
-        //Press J to mark beat
-        if (Input.GetKeyDown(KeyCode.J))
+        //Press to mark beat
+        if (Input.GetKeyDown(KeyCode.L))
         {
             float currentTime = audioSource.time;
             beatTimes.Add(currentTime);
             Debug.Log($"[BeatMarkerRecorder] Marked beat at {currentTime:F3}s");
         }
 
-        //Press Space to save
+        //Press to delete beat markers JSON and reset
+        if (Input.GetKeyDown(KeyCode.P))
+        {
+            DeleteBeatMarkers();
+        }
+
+        //Press to save
         if (Input.GetKeyDown(KeyCode.Space))
         {
             SaveBeatMarkers();
@@ -60,5 +66,23 @@ public class BeatMarkerRecorder : MonoBehaviour
         File.WriteAllText(savePath, json);
 
         Debug.Log($"[BeatMarkerRecorder] Saved {beatTimes.Count} beat markers to {savePath}");
+    }
+
+    private void DeleteBeatMarkers()
+    {
+        // Delete the JSON file if it exists
+        if (File.Exists(savePath))
+        {
+            File.Delete(savePath);
+            Debug.Log("[BeatMarkerRecorder] Deleted beat_markers.json");
+        }
+        else
+        {
+            Debug.LogWarning("[BeatMarkerRecorder] No beat_markers.json found to delete");
+        }
+
+        // Clear any recorded beat times so you can start fresh
+        beatTimes.Clear();
+        Debug.Log("[BeatMarkerRecorder] Cleared internal beat list");
     }
 }

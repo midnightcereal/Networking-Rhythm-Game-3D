@@ -46,7 +46,9 @@ public class EditorGUIManager : Editor
         if (GUILayout.Button("Pause")) manager.PauseAudio();
         if (GUILayout.Button("Restart"))
         {
+            Vector3 camPos = Camera.main.transform.position;
             manager.ResetTrack();
+
             EditorAutoPlayer autoPlayer = FindObjectOfType<EditorAutoPlayer>();
             if (autoPlayer != null)
             {
@@ -61,6 +63,9 @@ public class EditorGUIManager : Editor
             {
                 markerVisualiser.ResetMarkersPosition();
             }
+
+            //Restore camera's position
+            Camera.main.transform.position = camPos;
         }
         EditorGUILayout.EndHorizontal();
 
