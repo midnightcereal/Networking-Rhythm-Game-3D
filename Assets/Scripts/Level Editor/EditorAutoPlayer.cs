@@ -1,4 +1,3 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -9,7 +8,7 @@ public class EditorAutoPlayer : MonoBehaviour
     public Transform hitLine;
     public float hitTolerance = 0.05f;
 
-    [HideInInspector] public float speedMultiplier = 0.1f; // from loaded JSON
+    [HideInInspector] public float speedMultiplier = 0.1f;
     private List<EditorNote> notes = new List<EditorNote>();
     private static HashSet<EditorNote> activeHoldNotes = new HashSet<EditorNote>();
 
@@ -18,6 +17,8 @@ public class EditorAutoPlayer : MonoBehaviour
     private void Update()
     {
         if (!play) return;
+        if (EditorSongManager.Instance.audioSource == null) return;
+        if (!EditorSongManager.Instance.isPlayingFromCamera) return;
 
         float hitY = hitLine.position.y;
         float songTime = EditorSongManager.Instance.audioSource.time;
@@ -40,9 +41,6 @@ public class EditorAutoPlayer : MonoBehaviour
                 note.isHit = true;
                 note.transform.position = new Vector3(note.transform.position.x, hitY, note.transform.position.z);
                 note.PlayTapPop();
-                note.gameObject.SetActive(false);
-                notes.RemoveAt(i);
-                i--;
             }
 
             // HOLD NOTES
@@ -51,42 +49,39 @@ public class EditorAutoPlayer : MonoBehaviour
                 note.isHit = true;
                 note.transform.position = new Vector3(note.transform.position.x, hitY, note.transform.position.z);
                 note.StartHoldPulse();
-
                 activeHoldNotes.Add(note);
-                StartCoroutine(HoldRoutine(note));
             }
         }
     }
 
-    private IEnumerator HoldRoutine(EditorNote note)
+    public void ResetAllNotes()
     {
-        float songStartTime = EditorSongManager.Instance.audioSource.time;
-        float hitTime = note.time;
-        float holdEndTime = hitTime + note.holdDuration; // when the hold should complete
+        // Stop all active hold coroutines first
+        StopAllHolds();
 
-        while (EditorSongManager.Instance.audioSource.time < holdEndTime)
+        // Reset all notes to original positions
+        foreach (var note in notes)
+        {
+            if (note != null)
+                note.ResetNote();
+        }
+
+        activeHoldNotes.Clear();
+        Debug.Log("All notes reset.");
+    }
+
+    public void StopAllHolds()
+    {
+        foreach (var note in activeHoldNotes)
         {
             if (note != null)
             {
-                float remainingDuration = Mathf.Max(0f, holdEndTime - EditorSongManager.Instance.audioSource.time);
-
-                // Set hold line scale based on remaining time
-                float lineLength = remainingDuration / speedMultiplier;
-                note.UpdateHoldVisual(lineLength);
-
-                // Lock note Y at hit line
-                note.transform.position = new Vector3(note.transform.position.x, hitLine.position.y, note.transform.position.z);
+                note.StopHoldPulse();
+                note.gameObject.SetActive(true);
             }
-
-            yield return null;
         }
 
-        if (note != null)
-        {
-            note.StopHoldPulse();
-            note.gameObject.SetActive(false);
-            activeHoldNotes.Remove(note);
-        }
+        activeHoldNotes.Clear();
     }
 
     public void RefreshNotes()

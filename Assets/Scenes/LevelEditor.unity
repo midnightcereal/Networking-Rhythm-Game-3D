@@ -590,7 +590,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   play: 1
   hitLine: {fileID: 7732289100553974425}
-  hitTolerance: 0.5
+  hitTolerance: 0.4
   speedMultiplier: 0.1
 --- !u!4 &514986365
 Transform:
@@ -928,6 +928,54 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!1 &945554645
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 945554647}
+  - component: {fileID: 945554646}
+  m_Layer: 0
+  m_Name: --- Beat Visualiser ---
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &945554646
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945554645}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a99a83885a0ee43479864057faeb97c8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speedMultiplier: 1
+  laneX: 0
+  markerPrefab: {fileID: 2413030033346888932, guid: 29f8bb337cf1e6d41b3d2390d94977ab,
+    type: 3}
+--- !u!4 &945554647
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 945554645}
+  serializedVersion: 2
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &988123887
 GameObject:
   m_ObjectHideFlags: 0
@@ -1152,6 +1200,7 @@ MonoBehaviour:
   trackContainer: {fileID: 0}
   scrollSpeed: 25
   cameraReturnSpeed: 5
+  isPlayingFromCamera: 0
   laneXPositions:
   - -9.2
   - -2.85
@@ -1160,6 +1209,7 @@ MonoBehaviour:
   segmentCount: 100
   segmentColour: {r: 0, g: 1, b: 0, a: 1}
   holdDurationEditor: 1
+  snippetDuration: 0.15
   notes:
   - {fileID: 0}
   - {fileID: 0}
@@ -1991,6 +2041,7 @@ SceneRoots:
   m_Roots:
   - {fileID: 2081997518}
   - {fileID: 1211629174}
+  - {fileID: 945554647}
   - {fileID: 514986365}
   - {fileID: 471480978}
   - {fileID: 1133650419}

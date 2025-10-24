@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using UnityEditor;
+using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 [System.Serializable]
@@ -74,6 +75,7 @@ public class EditorSongManager : MonoBehaviour
     [SerializeField] private float cameraReturnSpeed = 5f;
     float defaultCameraY = 0f;
     private Coroutine cameraMoveRoutine;
+    [HideInInspector] public bool isPlayingFromCamera = false;
 
     [Header("Lanes")]
     public float[] laneXPositions = new float[] { -9.2f, -2.88f, 2.88f, 9.22f };
@@ -82,6 +84,9 @@ public class EditorSongManager : MonoBehaviour
 
     [Header("Hold Notes")]
     public float holdDurationEditor = 1f;
+
+    public float snippetDuration = 0.15f;
+    private Coroutine snippetCoroutine;
 
     [HideInInspector] public List<EditorNote> notes = new List<EditorNote>();
     [HideInInspector] public bool placingTap = false;
@@ -590,6 +595,9 @@ public class EditorSongManager : MonoBehaviour
     // ---------- HANDLE RUNTIME REBUILD when segmentCount / bpm / subdivision changes ----------
     private void UpdateSegmentRebuild()
     {
+        if (!isPlayingFromCamera)
+            return;
+
         // Only trigger rebuild if something changed
         if (lastSegmentCount != segmentCount || Mathf.Abs(lastBpm - bpm) > 0.001f || lastSubdivision != beatSubdivision)
         {
@@ -609,7 +617,9 @@ public class EditorSongManager : MonoBehaviour
     private void UpdateSegmentScroll()
     {
         if (audioSource == null || audioSource.clip == null) return;
-        if (!audioSource.isPlaying) return;
+        if (!isPlayingFromCamera || !audioSource.isPlaying) return;
+
+        Debug.Log("CALLED");
 
         float songTime = audioSource.time;              // seconds into the song
         float scrollOffset = songTime / speedMultiplier; // convert to world Y units
@@ -805,6 +815,9 @@ public class EditorSongManager : MonoBehaviour
 
         notes.Add(noteScript);
 
+        float snippetTime = Mathf.Abs(0 + (trackStartY - noteScript.transform.position.y) * speedMultiplier);
+        PlaySnippetAt(snippetTime, 0.35f);
+
         //Refresh autoplay
         EditorAutoPlayer autoPlayer = FindObjectOfType<EditorAutoPlayer>();
         if (autoPlayer != null)
@@ -976,6 +989,34 @@ public class EditorSongManager : MonoBehaviour
             audioSource.Pause();
     }
 
+    public void PlaySnippetAt(float time, float duration = 0.2f)
+    {
+        if (audioSource == null || audioSource.clip == null) return;
+
+        // Stop any previous snippet
+        if (snippetCoroutine != null)
+            StopCoroutine(snippetCoroutine);
+
+        snippetCoroutine = StartCoroutine(SnippetRoutine(time, duration));
+    }
+
+    private IEnumerator SnippetRoutine(float time, float duration)
+    {
+        Debug.Log("Time: " + time);
+        //Offset to make it equal the track actual time
+        audioSource.time = time;
+        audioSource.Play();
+
+        float elapsed = 0f;
+        while (elapsed < duration)
+        {
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+
+        audioSource.Stop();
+    }
+
     public void ResetTrack()
     {
         if (audioSource != null)
@@ -1037,15 +1078,15 @@ public class EditorSongManager : MonoBehaviour
             {
                 Gizmos.DrawSphere(new Vector3(laneXPositions[i], y, laneZ), 0.1f);
             }
-
-        #if UNITY_EDITOR
+            
+#if UNITY_EDITOR
             // Draw time label (in seconds) to the right of the lanes
             float timeAtSegment = (y - trackStartY) * speedMultiplier;
             UnityEditor.Handles.Label(
                 new Vector3(laneXPositions[laneXPositions.Length - 1] + 1.5f, y, laneZ),
                 $"{timeAtSegment:F2}s"
             );
-        #endif
+#endif
         }
     }
 

@@ -36,9 +36,32 @@ public class EditorGUIManager : Editor
         EditorGUILayout.Space();
         EditorGUILayout.LabelField("Playback Controls", EditorStyles.boldLabel);
         EditorGUILayout.BeginHorizontal();
-        if (GUILayout.Button("Play From Camera")) manager.PlayFromCamera();
+        if (GUILayout.Button("Play From Camera"))
+        {
+            if (EditorSongManager.Instance.audioSource == null) return;
+
+            EditorSongManager.Instance.isPlayingFromCamera = true;
+            manager.PlayFromCamera();
+        }
         if (GUILayout.Button("Pause")) manager.PauseAudio();
-        if (GUILayout.Button("Restart")) manager.ResetTrack();
+        if (GUILayout.Button("Restart"))
+        {
+            manager.ResetTrack();
+            EditorAutoPlayer autoPlayer = FindObjectOfType<EditorAutoPlayer>();
+            if (autoPlayer != null)
+            {
+                EditorSongManager.Instance.isPlayingFromCamera = false;
+
+                autoPlayer.ResetAllNotes();
+                autoPlayer.RefreshNotes();
+            }
+
+            BeatMarkerVisualizer markerVisualiser = FindObjectOfType<BeatMarkerVisualizer>();
+            if (markerVisualiser != null)
+            {
+                markerVisualiser.ResetMarkersPosition();
+            }
+        }
         EditorGUILayout.EndHorizontal();
 
         EditorGUILayout.Space();

@@ -11,13 +11,14 @@ public class EditorNote : MonoBehaviour
     public float time = 0f;           // when note should appear
 
     [HideInInspector] public bool isDragging = false;
-
     [HideInInspector] public bool isHit = false;
     [HideInInspector] public bool isBeingHeld = false;
 
     [Header("Hold Line Variables")]
     public Material holdLineMaterial;
     private Transform holdLine;
+
+    private Coroutine holdPulseRoutine;
 
     private void Awake()
     {
@@ -32,7 +33,7 @@ public class EditorNote : MonoBehaviour
         if (isDragging) return;
 
         // Move only if not hit and not being held by autoplayer
-        if (!isHit && !EditorAutoPlayer.IsPlayingNote(this))
+        if (!isHit && !EditorAutoPlayer.IsPlayingNote(this) && EditorSongManager.Instance.isPlayingFromCamera)
         {
             float songTime = EditorSongManager.Instance.audioSource.time;
             float y = (time - songTime) / EditorSongManager.Instance.speedMultiplier;
@@ -61,24 +62,8 @@ public class EditorNote : MonoBehaviour
             }
         }
 
-        // Scale the line in Y according to remainingLength
         holdLine.localScale = new Vector3(0.15f, remainingLength, 0.1f);
-
-        // Move line so bottom stays at note's position
         holdLine.localPosition = new Vector3(0f, remainingLength / 2f, -0.1f);
-
-        //SetupCollider(remainingLength);
-    }
-
-
-    public void SetupCollider(float length)
-    {
-        BoxCollider col = GetComponent<BoxCollider>();
-        if (col == null) col = gameObject.AddComponent<BoxCollider>();
-        col.isTrigger = true;
-        col.center = new Vector3(0f, length / 2f, 0f);
-        col.size = new Vector3(0.15f, length, 0.1f);
-        col.enabled = true;
     }
 
     public void PlayTapPop(float amplitude = 0.15f, float duration = 0.2f)
@@ -108,54 +93,58 @@ public class EditorNote : MonoBehaviour
         }
 
         transform.localScale = start;
+        gameObject.SetActive(false);
     }
 
     public void StartHoldPulse(float amplitude = 0.1f, float cycleDuration = 0.4f)
     {
-        if (!isBeingHeld) StartCoroutine(HoldPulseCoroutine(amplitude, cycleDuration));
+        if (!isBeingHeld)
+            holdPulseRoutine = StartCoroutine(HoldPulseCoroutine());
     }
 
-    private IEnumerator HoldPulseCoroutine(float amplitude, float cycleDuration)
+    private IEnumerator HoldPulseCoroutine()
     {
+        if (!holdLine) yield break;
+
         isBeingHeld = true;
-        Vector3 originalScale = transform.localScale;
-        float halfCycle = cycleDuration / 2f;
+        float elapsed = 0f;
 
-        while (isBeingHeld)
+        while (isBeingHeld && elapsed < holdDuration)
         {
-            float timer = 0f;
-            while (timer < halfCycle && isBeingHeld)
-            {
-                timer += Time.deltaTime;
-                transform.localScale = originalScale * (1f + amplitude * (timer / halfCycle));
-                yield return null;
-            }
+            elapsed += Time.deltaTime;
+            float remaining = Mathf.Clamp(holdDuration - elapsed, 0f, holdDuration);
 
-            timer = 0f;
-            while (timer < halfCycle && isBeingHeld)
-            {
-                timer += Time.deltaTime;
-                transform.localScale = originalScale * (1f + amplitude * (1f - timer / halfCycle));
-                yield return null;
-            }
+            holdLine.localScale = new Vector3(0.15f, remaining / EditorSongManager.Instance.speedMultiplier, 0.1f);
+            holdLine.localPosition = new Vector3(0f, remaining / (2f * EditorSongManager.Instance.speedMultiplier), 0f);
+
+            yield return null;
         }
 
-        transform.localScale = originalScale;
+        isBeingHeld = false;
+        gameObject.SetActive(false);
     }
 
-    public void StopHoldPulse() => isBeingHeld = false;
+    public void StopHoldPulse()
+    {
+        isBeingHeld = false;
+        if (holdPulseRoutine != null)
+        {
+            StopCoroutine(holdPulseRoutine);
+            holdPulseRoutine = null;
+        }
+    }
 
     public void ResetNote()
     {
         isHit = false;
+        StopHoldPulse();
         isBeingHeld = false;
+
         transform.position = new Vector3(transform.position.x, originalY, transform.position.z);
 
-        // Reset hold line to full length
         if (isHold)
             UpdateHoldVisual(holdDuration / EditorSongManager.Instance.speedMultiplier);
 
-        StopHoldPulse();
         gameObject.SetActive(true);
     }
 }
