@@ -54,10 +54,20 @@ public class SongManager : MonoBehaviour
     private void Start()
     {
         LoadSong();
+        //SpawnAllNotes();
+        //StartCoroutine(StartAudioWithDelay());
+
+        ////Initialize camera colours from JSON
+        //if (cameraColourManager != null && songData.availableColours != null)
+        //    cameraColourManager.Initialize(songData.availableColours, songData.bpm, songData.colourChangeBeats, audioSource);
+    }
+
+
+    public void BeginSong()
+    {
         SpawnAllNotes();
         StartCoroutine(StartAudioWithDelay());
 
-        //Initialize camera colours from JSON
         if (cameraColourManager != null && songData.availableColours != null)
             cameraColourManager.Initialize(songData.availableColours, songData.bpm, songData.colourChangeBeats, audioSource);
     }

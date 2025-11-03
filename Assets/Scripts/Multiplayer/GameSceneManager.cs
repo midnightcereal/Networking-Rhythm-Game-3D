@@ -24,10 +24,10 @@ public class GameSceneManager : NetworkBehaviour
 
     private void OnClientLoadedScene(ulong clientId, string sceneName, LoadSceneMode mode)
     {
-        if (sceneName == "GameScene")
+        if (sceneName == "Game")
         {
             playersReady.Add(clientId);
-            Debug.Log($"Client {clientId} loaded GameScene");
+            Debug.Log($"Client {clientId} loaded Game Scene");
 
             //Check if all connected players are ready
             if (NetworkManager.Singleton.IsHost)
@@ -45,19 +45,23 @@ public class GameSceneManager : NetworkBehaviour
     private void StartGameClientRpc()
     {
         Debug.Log("Game started for everyone!");
-        StartCoroutine(CountdownStart());
+        double startTime = NetworkManager.ServerTime.Time + 2.0;
+        StartCoroutine(CountdownStart(startTime));
     }
 
-    private IEnumerator CountdownStart()
+    private IEnumerator CountdownStart(double startTime)
     {
-        int count = 3;
-        while (count > 0)
-        {
-            Debug.Log(count);
-            yield return new WaitForSeconds(1f);
-            count--;
-        }
-        Debug.Log("Go!");
-        //Start song playback & rhythm logic here
+        double remaining = startTime - NetworkManager.ServerTime.Time;
+
+        if (remaining > 0)
+            yield return new WaitForSeconds((float)remaining);
+
+        Debug.Log("Start!");
+
+        SongManager songManager = FindObjectOfType<SongManager>();
+        if (songManager != null)
+            songManager.BeginSong();
+        else
+            Debug.LogError("No SongManager found in scene!");
     }
 }
