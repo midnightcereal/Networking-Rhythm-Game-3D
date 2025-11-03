@@ -5,8 +5,8 @@ public class Note : MonoBehaviour
 {
     public int lane = 0;
     public bool isHold = false;
-    public float holdDuration = 0f; // in seconds
-    public float time = 0f;         // when note should reach hitLine
+    public float holdDuration = 0f; //in seconds
+    public float time = 0f;         //when note should reach hitLine
 
     [Header("References")]
     public Transform hitLine;
@@ -19,7 +19,7 @@ public class Note : MonoBehaviour
     private Transform holdLine;
     private Vector3 originalScale;
 
-    [HideInInspector] public float speedMultiplier = 0.1f; // set from SongManager
+    [HideInInspector] public float speedMultiplier = 0.1f;
     private float songTimer = 0f;
     private AudioSource audioSource;
 
@@ -51,7 +51,7 @@ public class Note : MonoBehaviour
 
         if (!isHit)
         {
-            // Move note down
+            //Move note down
             float y = (time - songTimer) / speedMultiplier + hitLine.position.y;
             transform.position = new Vector3(transform.position.x, y, transform.position.z);
 
@@ -60,7 +60,7 @@ public class Note : MonoBehaviour
         }
         else if (isHold && isHolding)
         {
-            // Rapid pulsing while held
+            //Rapid pulsing while held
             float pulse = 0.03f * Mathf.Sin(Time.time * 50f);
             transform.localScale = originalScale * 1.3f * (1f + pulse);
 
@@ -87,15 +87,15 @@ public class Note : MonoBehaviour
         {
             isHolding = true;
 
-            // Combo for hold start
+            //Combo for hold start
             ComboManager.Instance.AddCombo(true, this);
 
-            // Start combo text pulse
+            //Start combo text pulse
             ComboManager.Instance.StartHoldPulse(this);
         }
         else
         {
-            // Combo for tap
+            //Combo for tap
             ComboManager.Instance.AddCombo(false, this);
 
             // Pop note animation
@@ -107,10 +107,10 @@ public class Note : MonoBehaviour
     {
         if (!isHold || !isHolding) return;
 
-        // Released too early (before the hold is done)
+        //Released too early (before the hold is done)
         if (holdTimer < holdDuration)
         {
-            // Reset combo on early release
+            //Reset combo on early release
             ComboManager.Instance.ResetCombo();
             Miss();
         }
@@ -119,7 +119,7 @@ public class Note : MonoBehaviour
             HoldComplete();
         }
 
-        // Stop combo text pulse immediately
+        //Stop combo text pulse immediately
         ComboManager.Instance.StopHoldPulse(this);
         transform.localScale = originalScale;
     }
@@ -131,13 +131,13 @@ public class Note : MonoBehaviour
         holdCompleted = true;
         isHolding = false;
 
-        // Extra combo for completing hold
+        //Extra combo for completing hold
         ComboManager.Instance.AddCombo(true, this);
 
-        // Pop note on hold completion
+        //Pop note on hold completion
         StartCoroutine(PopAndDestroy());
 
-        // Stop combo text pulse
+        //Stop combo text pulse
         ComboManager.Instance.StopHoldPulse(this);
     }
 
@@ -162,5 +162,6 @@ public class Note : MonoBehaviour
     {
         transform.localScale = originalScale;
         Destroy(gameObject);
+        ComboManager.Instance.ResetCombo();
     }
 }

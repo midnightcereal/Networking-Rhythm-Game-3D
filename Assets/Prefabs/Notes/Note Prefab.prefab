@@ -96,9 +96,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e2c190d71d6b60b488adbcfc3f5bc37b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 0
-  hitLine: {fileID: 0}
+  lane: 0
   isHold: 0
   holdDuration: 0
-  holdColor: {r: 1, g: 1, b: 1, a: 1}
-  holdMaterial: {fileID: 2100000, guid: f1a27f6e81f638940925f3884f8717c7, type: 2}
+  time: 0
+  hitLine: {fileID: 0}
+  holdLineMaterial: {fileID: 2100000, guid: bc3592fc7d124ce49886af44919004ef, type: 2}
+  isHit: 0
+  speedMultiplier: 0.1

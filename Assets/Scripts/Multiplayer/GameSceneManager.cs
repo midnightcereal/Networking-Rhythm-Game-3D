@@ -8,7 +8,11 @@ public class GameSceneManager : NetworkBehaviour
 {
     public static GameSceneManager Instance;
 
+    [Header("Local Rhythm Prefab")]
+    public GameObject localRhythmPrefab;
+
     private HashSet<ulong> playersReady = new HashSet<ulong>();
+    private GameObject localRhythmInstance;
 
     private void Awake()
     {
@@ -24,21 +28,44 @@ public class GameSceneManager : NetworkBehaviour
 
     private void OnClientLoadedScene(ulong clientId, string sceneName, LoadSceneMode mode)
     {
-        if (sceneName == "Game")
-        {
-            playersReady.Add(clientId);
-            Debug.Log($"Client {clientId} loaded Game Scene");
+        if (sceneName != "Game") return;
 
-            //Check if all connected players are ready
-            if (NetworkManager.Singleton.IsHost)
+        Debug.Log($"Client {clientId} loaded Game scene");
+
+        //Spawn local rhythm setup for local player
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            SpawnLocalRhythmSetup();
+        }
+
+        //Track ready players on the host
+        playersReady.Add(clientId);
+
+        if (NetworkManager.Singleton.IsHost)
+        {
+            if (playersReady.Count == NetworkManager.Singleton.ConnectedClientsIds.Count)
             {
-                if (playersReady.Count == NetworkManager.Singleton.ConnectedClientsIds.Count)
-                {
-                    Debug.Log("All players loaded. Starting game!");
-                    StartGameClientRpc();
-                }
+                Debug.Log("All players loaded. Starting game!");
+                StartGameClientRpc();
             }
         }
+    }
+
+    private void SpawnLocalRhythmSetup()
+    {
+        if (localRhythmPrefab == null)
+        {
+            Debug.LogError("Local rhythm prefab not assigned in GameSceneManager!");
+            return;
+        }
+
+        if (localRhythmInstance != null)
+        {
+            Destroy(localRhythmInstance);
+        }
+
+        localRhythmInstance = Instantiate(localRhythmPrefab);
+        Debug.Log("Spawned local rhythm setup for local client");
     }
 
     [ClientRpc]

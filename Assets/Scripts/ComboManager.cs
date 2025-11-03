@@ -8,10 +8,10 @@ public class ComboManager : MonoBehaviour
 
     [Header("Combo UI")]
     public TextMeshProUGUI comboText;
-    public float tapBounceDuration = 0.2f;     // single tap bounce duration
-    public float holdBounceDuration = 0.4f;    // full cycle up & down for hold
-    public float holdBounceAmplitude = 10f;    // pixels moved up/down for hold
-    public float tapBounceAmplitude = 15f;     // pixels moved up/down for tap
+    public float tapBounceDuration = 0.2f;     //single tap bounce duration
+    public float holdBounceDuration = 0.4f;    //full cycle up & down for hold
+    public float holdBounceAmplitude = 10f;    //pixels moved up/down for hold
+    public float tapBounceAmplitude = 15f;     //pixels moved up/down for tap
 
     private int combo = 0;
     private Vector3 originalPos;
@@ -71,11 +71,11 @@ public class ComboManager : MonoBehaviour
 
         if (combo < 2) return;
 
-        // Tap animation only if not currently holding
+        //Tap animation only if not currently holding
         if (!isHold && !isHolding)
             StartCoroutine(TapBounce());
 
-        // Start hold pulse if this is a hold note
+        //Start hold pulse if this is a hold note
         else if (isHold && !isHolding)
             StartHoldPulse(note);
     }
@@ -139,7 +139,7 @@ public class ComboManager : MonoBehaviour
 
         while (isHolding)
         {
-            // Move up
+            //Move up
             float timer = 0f;
             Vector3 start = originalPos;
             Vector3 end = originalPos + Vector3.up * holdBounceAmplitude;
@@ -151,7 +151,7 @@ public class ComboManager : MonoBehaviour
                 yield return null;
             }
 
-            // Move down
+            //Move down
             timer = 0f;
             while (timer < halfCycle && isHolding)
             {
@@ -161,7 +161,7 @@ public class ComboManager : MonoBehaviour
             }
         }
 
-        // Reset position after stopping
+        //Reset position after stopping
         if (comboText != null)
             comboText.transform.localPosition = originalPos;
     }

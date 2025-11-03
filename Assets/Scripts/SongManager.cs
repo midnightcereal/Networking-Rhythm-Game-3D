@@ -36,14 +36,14 @@ public class SongManager : MonoBehaviour
     [Header("Audio & Timing")]
     public float manualOffset = 1.0f;
     public float preRollSeconds = 3f;
-    public string songJsonFile = "TestSong"; // from Resources/Songs
+    public string songJsonFile = "TestSong"; //from Resources/Songs
     public AudioSource audioSource;
 
     [Header("Editor Settings")]
-    public float segmentHeight = 1f; // must match EditorSongManager
+    public float segmentHeight = 1f;
     public float bpm = 120f;
-    public int beatSubdivision = 4; // must match EditorSongManager
-    public float speedMultiplier = 0.1f; // must match EditorSongManager
+    public int beatSubdivision = 4;
+    public float speedMultiplier = 0.1f;
 
     [Header("References")]
     public CameraColourManager cameraColourManager;
@@ -54,12 +54,6 @@ public class SongManager : MonoBehaviour
     private void Start()
     {
         LoadSong();
-        //SpawnAllNotes();
-        //StartCoroutine(StartAudioWithDelay());
-
-        ////Initialize camera colours from JSON
-        //if (cameraColourManager != null && songData.availableColours != null)
-        //    cameraColourManager.Initialize(songData.availableColours, songData.bpm, songData.colourChangeBeats, audioSource);
     }
 
 
@@ -83,7 +77,7 @@ public class SongManager : MonoBehaviour
 
         songData = JsonUtility.FromJson<SongData>(file.text);
 
-        // override editor values if JSON has them
+        //Override editor values if JSON has them
         bpm = songData.bpm;
         speedMultiplier = songData.speedMultiplier;
 
@@ -126,11 +120,9 @@ public class SongManager : MonoBehaviour
 
     private IEnumerator StartAudioWithDelay()
     {
-        // Wait for the absolute value of negative preRollSeconds
         yield return new WaitForSeconds(Mathf.Abs(preRollSeconds));
 
         if (audioSource != null && audioSource.clip != null)
             audioSource.Play();
     }
-
 }
