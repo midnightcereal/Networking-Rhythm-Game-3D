@@ -83,12 +83,32 @@ public class GameSceneManager : NetworkBehaviour
         if (remaining > 0)
             yield return new WaitForSeconds((float)remaining);
 
-        Debug.Log("Start!");
+        Debug.Log("Starting song intro!");
 
         SongManager songManager = FindObjectOfType<SongManager>();
-        if (songManager != null)
-            songManager.BeginSong();
-        else
+        SongIntroUI introUI = FindObjectOfType<SongIntroUI>();
+
+        if (songManager == null)
+        {
             Debug.LogError("No SongManager found in scene!");
+            yield break;
+        }
+
+        var songData = songManager.GetSongData();
+
+        if (introUI != null && songData != null)
+        {
+            string songTitle = songData.songName;
+            string artist = songData.artist;
+            int difficulty = songData.difficulty;
+
+            yield return introUI.PlayIntroSequence(songTitle, artist, difficulty);
+        }
+        else
+        {
+            Debug.LogWarning("No SongIntroUI found or SongData missing, skipping intro.");
+        }
+
+        songManager.BeginSong();
     }
 }

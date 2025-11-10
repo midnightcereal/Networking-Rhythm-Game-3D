@@ -85,6 +85,14 @@ public class ComboManager : MonoBehaviour
     ///</summary>
     public void ResetCombo()
     {
+        if(combo > 1)
+        {
+            //Flash Screen
+            MissEffect missEffect = FindObjectOfType<MissEffect>();
+            if (missEffect != null)
+                missEffect.TriggerMissFlash();
+        }
+
         combo = 0;
         UpdateComboText();
         StopHoldPulse();

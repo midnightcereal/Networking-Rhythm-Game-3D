@@ -15,8 +15,10 @@ public class NoteData
 public class SongData
 {
     public string songName;
+    public string artist;
+    public int difficulty; // 1–5
     public float bpm;
-    public float speedMultiplier = 0.1f; // editor multiplier
+    public float speedMultiplier = 0.1f; //editor multiplier
     public string audioFile;
     //Camera Colours
     public int colourChangeBeats = 1;
@@ -56,7 +58,6 @@ public class SongManager : MonoBehaviour
         LoadSong();
     }
 
-
     public void BeginSong()
     {
         SpawnAllNotes();
@@ -89,6 +90,11 @@ public class SongManager : MonoBehaviour
             if (clip) audioSource.clip = clip;
             else Debug.LogWarning($"Audio file '{songData.audioFile}' not found!");
         }
+    }
+
+    public SongData GetSongData()
+    {
+        return songData;
     }
 
     private void SpawnAllNotes()
