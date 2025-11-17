@@ -60,6 +60,13 @@ public class SongIntroUI : MonoBehaviour
         countdownText.text = "GO!";
         yield return new WaitForSeconds(0.6f);
         countdownText.text = "";
+
+        //Spawn The UI Prefab
+        var spawner = FindObjectOfType<GameplayUISpawner>();
+        if (spawner != null)
+            spawner.SpawnAfterIntro();
+        else
+            Debug.LogError("GameplayUISpawner not found in scene!");
     }
 
     private IEnumerator FadeCanvas(CanvasGroup group, float from, float to, float duration)

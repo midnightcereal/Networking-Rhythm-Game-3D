@@ -1,10 +1,13 @@
-using UnityEngine;
-using TMPro;
 using System.Collections;
+using System.Globalization;
+using TMPro;
+using Unity.Netcode;
+using UnityEngine;
 
 public class ComboManager : MonoBehaviour
 {
     public static ComboManager Instance;
+    private PlayerStats playerStats;
 
     [Header("Combo UI")]
     public TextMeshProUGUI comboText;
@@ -23,6 +26,8 @@ public class ComboManager : MonoBehaviour
         Instance = this;
         if (comboText != null)
             originalPos = comboText.transform.localPosition;
+
+        playerStats = NetworkManager.Singleton.LocalClient?.PlayerObject?.GetComponent<PlayerStats>();
     }
 
     ///<summary>
@@ -67,6 +72,8 @@ public class ComboManager : MonoBehaviour
     public void AddCombo(bool isHold, Note note = null)
     {
         combo++;
+        //Network the combo increase
+        if (playerStats != null) playerStats.UpdateComboServerRpc(combo);
         UpdateComboText();
 
         if (combo < 2) return;
@@ -85,7 +92,10 @@ public class ComboManager : MonoBehaviour
     ///</summary>
     public void ResetCombo()
     {
-        if(combo > 1)
+        //Network health loss
+        if (combo > 0 && playerStats != null) playerStats.DeductHealthServerRpc(combo);
+
+        if (combo > 1)
         {
             //Flash Screen
             MissEffect missEffect = FindObjectOfType<MissEffect>();
@@ -94,6 +104,10 @@ public class ComboManager : MonoBehaviour
         }
 
         combo = 0;
+
+        //Network the combo reset
+        if (playerStats != null) playerStats.UpdateComboServerRpc(0);
+
         UpdateComboText();
         StopHoldPulse();
     }
