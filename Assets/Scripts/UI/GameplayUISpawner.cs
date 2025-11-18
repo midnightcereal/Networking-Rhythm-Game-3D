@@ -14,34 +14,42 @@ public class GameplayUISpawner : NetworkBehaviour
             Debug.Log($"Client {OwnerClientId} - Not server, skipping UI spawn.");
             return;
         }
-
         if (uiPrefab == null)
         {
-            Debug.LogError("uiPrefab is NULL!");
+            Debug.LogError("UI Prefab is NULL!");
             return;
         }
-
         if (!uiPrefab.GetComponent<NetworkObject>())
         {
-            Debug.LogError("uiPrefab is missing NetworkObject component!");
+            Debug.LogError("UI Prefab is missing NetworkObject component!");
             return;
         }
-
         Debug.Log("Server is spawning UI prefab");
     }
 
-    //Called From SongIntroUI After Intro
+    ///<summary>Called from SongIntroUI</summary>
+    public void RequestUISpawnAfterIntro()
+    {
+        Debug.Log($"[{NetworkManager.Singleton.LocalClientId}] requests UI spawn");
+        RequestUISpawnServerRpc();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestUISpawnServerRpc()
+    {
+        Debug.Log("[SERVER] RPC received -> Spawning UI!");
+        SpawnAfterIntro();
+    }
+
     public void SpawnAfterIntro()
     {
         Debug.Log("Called UI Spawn After Intro");
-
         if (!IsServer) return;
         if (hasSpawnedUI)
         {
             Debug.Log("UI already spawned, skipping.");
             return;
         }
-
         Debug.Log("Song intro finished -> Spawning Gameplay UI NOW!");
         SpawnGameplayUI();
     }
@@ -49,10 +57,8 @@ public class GameplayUISpawner : NetworkBehaviour
     private void SpawnGameplayUI()
     {
         if (hasSpawnedUI) return;
-
         GameObject ui = Instantiate(uiPrefab, Vector3.zero, Quaternion.identity);
         var netObj = ui.GetComponent<NetworkObject>();
-
         if (netObj != null)
         {
             netObj.Spawn();
