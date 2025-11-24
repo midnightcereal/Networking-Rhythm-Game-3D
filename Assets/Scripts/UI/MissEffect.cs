@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -8,6 +9,7 @@ public class MissEffect : MonoBehaviour
 
     [Header("Flash Effect Settings")]
     public Image imageOverlay;
+    public TextMeshProUGUI gameOverText;
     public Color flashColor = new Color(1f, 0f, 0f, 0.6f);
     public float flashDuration = 0.3f;
 
@@ -26,6 +28,8 @@ public class MissEffect : MonoBehaviour
 
         if (imageOverlay != null)
             imageOverlay.color = new Color(0, 0, 0, 0);
+
+        gameOverText.enabled = false;
     }
 
     public void TriggerMissFlash()
@@ -47,7 +51,9 @@ public class MissEffect : MonoBehaviour
         isGameOver = true;
 
         if (imageOverlay != null)
-            imageOverlay.color = flashColor;
+            imageOverlay.color = new Color(1f, 0f, 0f, 0.4f);
+
+    gameOverText.enabled = true;
         Debug.Log("[MissEffect] Permanent GAME OVER flash activated!");
     }
 

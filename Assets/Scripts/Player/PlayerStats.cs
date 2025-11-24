@@ -3,8 +3,8 @@ using Unity.Netcode;
 
 public class PlayerStats : NetworkBehaviour
 {
-    public NetworkVariable<int> Combo = new(0);
-    public NetworkVariable<float> Health = new(100f);
+    public NetworkVariable<int> Combo = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<float> Health = new(100f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
     public override void OnNetworkSpawn()
     {
@@ -54,9 +54,9 @@ public class PlayerStats : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void DeductHealthServerRpc(int previousCombo)
     {
-        float deduction = 20f;
-        if (previousCombo > 100) deduction = 5f;
-        else if (previousCombo > 30) deduction = 10f;
+        float deduction = 10f;
+        if (previousCombo > 100) deduction = 1f;
+        else if (previousCombo > 30) deduction = 5f;
         Health.Value = Mathf.Max(0f, Health.Value - deduction);
     }
 }
