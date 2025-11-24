@@ -8,10 +8,14 @@ public class PlayerStats : NetworkBehaviour
 
     public override void OnNetworkSpawn()
     {
+        Debug.Log($"[PlayerStats] OnNetworkSpawn - IsOwner: {IsOwner}, ClientId: {OwnerClientId}");
+
         if (IsOwner)
         {
             Health.Value = 100f;
             Combo.Value = 0;
+
+            Debug.Log("[PlayerStats] Owner initialized: Health=100, Combo=0");
         }
 
         //Update UI when values change
@@ -21,17 +25,29 @@ public class PlayerStats : NetworkBehaviour
 
     private void OnComboChanged(int prev, int curr)
     {
+        Debug.Log($"[PlayerStats] COMBO CHANGED: {prev} -> {curr} (Client {OwnerClientId})");
         GameplayUI.Instance?.UpdatePlayer(OwnerClientId, curr, Health.Value);
     }
 
     private void OnHealthChanged(float prev, float curr)
     {
+        Debug.Log($"[PlayerStats] HEALTH CHANGED: {prev:F1} -> {curr:F1} (Client {OwnerClientId})");
+
         GameplayUI.Instance?.UpdatePlayer(OwnerClientId, Combo.Value, curr);
+
+        //Permanent flash ONLY for local player for game over
+        if (IsOwner && curr <= 0f)
+        {
+            MissEffect.Instance?.TriggerPermanentFlash();
+            GameplayUI.Instance?.OnPlayerFailed(OwnerClientId);
+            Debug.Log($"[PlayerStats] PLAYER {OwnerClientId} HAS FAILED - GAME OVER");
+        }
     }
 
     [ServerRpc(RequireOwnership = false)]
     public void UpdateComboServerRpc(int newCombo)
     {
+        Debug.Log($"[PlayerStats] ServerRpc: UpdateComboServerRpc({newCombo}) from Client {OwnerClientId}");
         Combo.Value = newCombo;
     }
 

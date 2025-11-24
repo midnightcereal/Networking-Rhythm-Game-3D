@@ -93,7 +93,31 @@ public class ComboManager : MonoBehaviour
     public void ResetCombo()
     {
         //Network health loss
-        if (combo > 0 && playerStats != null) playerStats.DeductHealthServerRpc(combo);
+        if (combo > 0 && playerStats != null)
+        {
+            if (!playerStats.IsOwner)
+            {
+                Debug.LogWarning("[ComboManager] Not owner of PlayerStats - cannot modify health directly");
+            }
+            else
+            {
+                float deduction = (combo > 30) ? 5f : 10f;
+                float oldHealth = playerStats.Health.Value;
+                float newHealth = Mathf.Max(0f, oldHealth - deduction);
+
+                Debug.Log($"[ComboManager] DEDUCTING HEALTH: Combo={combo} (>30? {combo > 30}) | " +
+                          $"Deduction={deduction} | Old={oldHealth} -> New={newHealth}");
+
+                playerStats.Health.Value = newHealth;
+
+                //Show damage popup
+                GameplayUI.Instance?.ShowDamagePopup(NetworkManager.Singleton.LocalClientId, deduction);
+            }
+        }
+        else
+        {
+            Debug.Log("[ComboManager] No health deduction - combo = 0 or playerStats missing");
+        }
 
         if (combo > 1)
         {
@@ -106,7 +130,11 @@ public class ComboManager : MonoBehaviour
         combo = 0;
 
         //Network the combo reset
-        if (playerStats != null) playerStats.UpdateComboServerRpc(0);
+        if (playerStats != null)
+        {
+            Debug.Log("[ComboManager] Sending combo reset to server");
+            playerStats.UpdateComboServerRpc(0);
+        }
 
         UpdateComboText();
         StopHoldPulse();
