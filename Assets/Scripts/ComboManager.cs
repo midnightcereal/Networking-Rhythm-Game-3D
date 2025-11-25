@@ -105,13 +105,12 @@ public class ComboManager : MonoBehaviour
                 float oldHealth = playerStats.Health.Value;
                 float newHealth = Mathf.Max(0f, oldHealth - deduction);
 
-                Debug.Log($"[ComboManager] DEDUCTING HEALTH: Combo={combo} (>30? {combo > 30}) | " +
-                          $"Deduction={deduction} | Old={oldHealth} -> New={newHealth}");
-
                 playerStats.Health.Value = newHealth;
 
                 //Show damage popup
-                GameplayUI.Instance?.ShowDamagePopup(NetworkManager.Singleton.LocalClientId, deduction);
+                //GameplayUI.Instance?.ShowDamagePopup(NetworkManager.Singleton.LocalClientId, deduction);
+                if (playerStats != null)
+                    playerStats.ShowDamagePopupServerRpc(NetworkManager.Singleton.LocalClientId, deduction);
             }
         }
         else
@@ -132,7 +131,6 @@ public class ComboManager : MonoBehaviour
         //Network the combo reset
         if (playerStats != null)
         {
-            Debug.Log("[ComboManager] Sending combo reset to server");
             playerStats.UpdateComboServerRpc(0);
         }
 

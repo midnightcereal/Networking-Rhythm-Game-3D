@@ -53,13 +53,12 @@ public class GameplayUI : NetworkBehaviour
     ///<summary>Called from PlayerStats when values change</summary>
     public void UpdatePlayer(ulong clientId, int combo, float health)
     {
-        Debug.Log($"[GameplayUI] UpdatePlayer called - ClientId: {clientId} | Combo: {combo} | Health: {health:F1}");
+        //Debug.Log($"[GameplayUI] UpdatePlayer called - ClientId: {clientId} | Combo: {combo} | Health: {health:F1}");
 
         int side = GetPlayerSide(clientId);
 
         Slider healthSlider = side == 0 ? leftHealthSlider : rightHealthSlider;
         Slider comboSlider = side == 0 ? leftComboSlider : rightComboSlider;
-
         comboSlider.value = combo;
         healthSlider.value = health;
 

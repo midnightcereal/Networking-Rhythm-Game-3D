@@ -3,7 +3,7 @@ using Unity.Netcode;
 
 public class PlayerStats : NetworkBehaviour
 {
-    public NetworkVariable<int> Combo = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<int> Combo = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<float> Health = new(100f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
     public override void OnNetworkSpawn()
@@ -58,5 +58,18 @@ public class PlayerStats : NetworkBehaviour
         if (previousCombo > 100) deduction = 1f;
         else if (previousCombo > 30) deduction = 5f;
         Health.Value = Mathf.Max(0f, Health.Value - deduction);
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void ShowDamagePopupServerRpc(ulong clientId, float damageAmount)
+    {
+        ShowDamagePopupClientRpc(clientId, damageAmount);
+    }
+
+    [ClientRpc]
+    public void ShowDamagePopupClientRpc(ulong clientId, float damageAmount)
+    {
+        GameplayUI.Instance?.ShowDamagePopup(clientId, damageAmount);
+        MissEffect.Instance?.TriggerMissFlash(); // Flash on both clients!
     }
 }
