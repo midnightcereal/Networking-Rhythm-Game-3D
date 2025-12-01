@@ -4,10 +4,15 @@ using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
+using static PlayerStats;
 
 public class GameplayUI : NetworkBehaviour
 {
     public static GameplayUI Instance { get; private set; }
+
+    [Header("Player Names")]
+    public TMPro.TextMeshProUGUI leftPlayerNameText;
+    public TMPro.TextMeshProUGUI rightPlayerNameText;
 
     [Header("Player 1 - Left Side")]
     public Slider leftComboSlider;
@@ -21,6 +26,20 @@ public class GameplayUI : NetworkBehaviour
     public GameObject damageTextPrefab;
     public Transform leftDamagePopupParent;
     public Transform rightDamagePopupParent;
+
+    [Header("Combo Bar Colors")]
+    public Image leftComboFill;
+    public Image rightComboFill;
+    public Image leftComboBackground;
+    public Image rightComboBackground;
+
+    private readonly Color defaultColor = Color.white;
+    private readonly Color blueColor = new Color(0.0f, 0.0f, 0.7f);     //30+
+    private readonly Color indigoColor = new Color(0.2f, 0.0f, 0.9f);     //50+
+    private readonly Color purpleColor = new Color(0.7f, 0f, 1f);      //70+
+
+    private int lastMilestoneLeft = 0;
+    private int lastMilestoneRight = 0;
 
     private Dictionary<ulong, int> playerSide = new();
 
@@ -50,25 +69,62 @@ public class GameplayUI : NetworkBehaviour
         }
     }
 
+    ///<summary>Called from PlayerStats.OnRoleChanged()</summary>
+    public void UpdatePlayerLabel(ulong clientId, PlayerStats.PlayerRole role)
+    {
+        int side = GetPlayerSide(clientId);
+        string label = role == PlayerStats.PlayerRole.Host ? "Host" : "Client";
+
+        if (side == 0 && leftPlayerNameText)
+            leftPlayerNameText.text = label;
+        else if (side == 1 && rightPlayerNameText)
+            rightPlayerNameText.text = label;
+
+        Debug.Log($"[UI NAME] Client {clientId} -> Side {side} -> {label}");
+    }
+
     ///<summary>Called from PlayerStats when values change</summary>
     public void UpdatePlayer(ulong clientId, int combo, float health)
     {
-        //Debug.Log($"[GameplayUI] UpdatePlayer called - ClientId: {clientId} | Combo: {combo} | Health: {health:F1}");
-
         int side = GetPlayerSide(clientId);
-
         Slider healthSlider = side == 0 ? leftHealthSlider : rightHealthSlider;
         Slider comboSlider = side == 0 ? leftComboSlider : rightComboSlider;
+        Image fill = side == 0 ? leftComboFill : rightComboFill;
+        Image background = side == 0 ? leftComboBackground : rightComboBackground;
+
+        //Update values
         comboSlider.value = combo;
         healthSlider.value = health;
 
         if (health <= 0f)
-        {
             healthSlider.gameObject.SetActive(false);
-        }
         else if (!healthSlider.gameObject.activeSelf)
-        {
             healthSlider.gameObject.SetActive(true);
+
+        if (fill != null && background != null)
+        {
+            int currentMilestone = 0;
+            if (combo >= 7) currentMilestone = 7;
+            else if (combo >= 5) currentMilestone = 5;
+            else if (combo >= 3) currentMilestone = 3;
+
+            int lastMilestone = side == 0 ? lastMilestoneLeft : lastMilestoneRight;
+
+            if (currentMilestone != lastMilestone || (combo < 3 && lastMilestone >= 3))
+            {
+                Color targetFill = currentMilestone switch
+                {
+                    7 => purpleColor,
+                    5 => indigoColor,
+                    3 => blueColor,
+                    _ => defaultColor
+                };
+
+                fill.color = targetFill;
+
+                if (side == 0) lastMilestoneLeft = currentMilestone;
+                else lastMilestoneRight = currentMilestone;
+            }
         }
     }
 
