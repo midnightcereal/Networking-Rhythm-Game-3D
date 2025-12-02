@@ -6,14 +6,6 @@ public class PlayerStats : NetworkBehaviour
     public NetworkVariable<int> Combo = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<float> Health = new(100f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
 
-    //For name text
-    public enum PlayerRole { None, Host, Client }
-    public NetworkVariable<PlayerRole> Role = new(
-        PlayerRole.None,
-        NetworkVariableReadPermission.Everyone,
-        NetworkVariableWritePermission.Server
-    );
-
     public override void OnNetworkSpawn()
     {
         Debug.Log($"[PlayerStats] OnNetworkSpawn - IsOwner: {IsOwner}, ClientId: {OwnerClientId}");
@@ -26,25 +18,12 @@ public class PlayerStats : NetworkBehaviour
             Debug.Log("[PlayerStats] Owner initialized: Health=100, Combo=0");
         }
 
-        if (IsServer)
-        {
-            Role.Value = IsHost ? PlayerRole.Host : PlayerRole.Client;
-        }
-
         //Update UI when values change
         Combo.OnValueChanged += OnComboChanged;
         Health.OnValueChanged += OnHealthChanged;
-        Role.OnValueChanged += OnRoleChanged;
 
-        OnRoleChanged(PlayerRole.None, Role.Value);
         OnComboChanged(-1, Combo.Value);
         OnHealthChanged(-1f, Health.Value);
-    }
-
-    private void OnRoleChanged(PlayerRole previous, PlayerRole current)
-    {
-        Debug.Log($"[UI NAME] Role changed for Client {OwnerClientId}: {current}");
-        GameplayUI.Instance?.UpdatePlayerLabel(OwnerClientId, current);
     }
 
     private void OnComboChanged(int prev, int curr)

@@ -13,6 +13,7 @@ public class GameplayUI : NetworkBehaviour
     [Header("Player Names")]
     public TMPro.TextMeshProUGUI leftPlayerNameText;
     public TMPro.TextMeshProUGUI rightPlayerNameText;
+    private readonly Dictionary<ulong, string> basePlayerNames = new();
 
     [Header("Player 1 - Left Side")]
     public Slider leftComboSlider;
@@ -56,6 +57,42 @@ public class GameplayUI : NetworkBehaviour
         SetupSlider(leftHealthSlider, 100f, 100f);
         SetupSlider(rightComboSlider, 100f, 0f);
         SetupSlider(rightHealthSlider, 100f, 100f);
+
+        if (leftPlayerNameText) leftPlayerNameText.text = "";
+        if (rightPlayerNameText) rightPlayerNameText.text = "";
+
+        StartCoroutine(ApplyPlayerNamesWhenReady());
+    }
+
+    private IEnumerator ApplyPlayerNamesWhenReady()
+    {
+        yield return null;
+
+        var networkPlayers = FindObjectsOfType<NetworkPlayer>();
+
+        foreach (var player in networkPlayers)
+        {
+            if (player.DisplayName.Value.Length > 0)
+            {
+                string baseName = player.DisplayName.Value.ToString();
+                ulong clientId = player.OwnerClientId;
+
+                int side = GetPlayerSide(clientId);
+                bool isLocalPlayer = clientId == NetworkManager.Singleton.LocalClientId;
+
+                string displayName = isLocalPlayer ? $"{baseName} (You)" : baseName;
+
+                if (side == 0 && leftPlayerNameText)
+                    leftPlayerNameText.text = displayName;
+                else if (side == 1 && rightPlayerNameText)
+                    rightPlayerNameText.text = displayName;
+            }
+        }
+    }
+
+    public override void OnNetworkDespawn()
+    {
+        PlayerNameManager.OnPlayerNameReceived -= HandlePlayerNameReceived;
     }
 
     private void SetupSlider(Slider slider, float maxValue, float startValue)
@@ -69,18 +106,16 @@ public class GameplayUI : NetworkBehaviour
         }
     }
 
-    ///<summary>Called from PlayerStats.OnRoleChanged()</summary>
-    public void UpdatePlayerLabel(ulong clientId, PlayerStats.PlayerRole role)
+    private void HandlePlayerNameReceived(ulong clientId, string name)
     {
         int side = GetPlayerSide(clientId);
-        string label = role == PlayerStats.PlayerRole.Host ? "Host" : "Client";
 
         if (side == 0 && leftPlayerNameText)
-            leftPlayerNameText.text = label;
+            leftPlayerNameText.text = name;
         else if (side == 1 && rightPlayerNameText)
-            rightPlayerNameText.text = label;
+            rightPlayerNameText.text = name;
 
-        Debug.Log($"[UI NAME] Client {clientId} -> Side {side} -> {label}");
+        Debug.Log($"[GameplayUI] {name} assigned to {(side == 0 ? "LEFT" : "RIGHT")} (Client {clientId})");
     }
 
     ///<summary>Called from PlayerStats when values change</summary>

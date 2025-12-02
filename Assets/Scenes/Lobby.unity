@@ -2605,6 +2605,24 @@ Canvas:
   m_SortingLayerID: 0
   m_SortingOrder: 0
   m_TargetDisplay: 0
+--- !u!1 &1950456019 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2377084247770242971, guid: 69725bb047ffb254480d35b08f596aa1,
+    type: 3}
+  m_PrefabInstance: {fileID: 3320517747396604129}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1950456023
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1950456019}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e03e6a511e2549943abe142a4b6876ad, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1976195170
 GameObject:
   m_ObjectHideFlags: 0
@@ -2883,7 +2901,11 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 2377084247770242971, guid: 69725bb047ffb254480d35b08f596aa1,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1950456023}
   m_SourcePrefab: {fileID: 100100000, guid: 69725bb047ffb254480d35b08f596aa1, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
