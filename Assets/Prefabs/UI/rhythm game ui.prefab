@@ -2063,6 +2063,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   leftPlayerNameText: {fileID: 4057092118814388137}
   rightPlayerNameText: {fileID: 9036984341625152814}
+  leftAbilityText: {fileID: 0}
+  rightAbilityText: {fileID: 0}
   leftComboSlider: {fileID: 9205636223550173228}
   leftHealthSlider: {fileID: 2809616771922690025}
   rightComboSlider: {fileID: 2099127130255368305}

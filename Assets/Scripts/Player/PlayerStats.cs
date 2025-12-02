@@ -30,6 +30,8 @@ public class PlayerStats : NetworkBehaviour
     {
         Debug.Log($"[PlayerStats] COMBO CHANGED: {prev} -> {curr} (Client {OwnerClientId})");
         GameplayUI.Instance?.UpdatePlayer(OwnerClientId, curr, Health.Value);
+        int side = GameplayUI.Instance.GetPlayerSide(OwnerClientId);
+        GameplayUI.Instance.ClearAbilityText(side);
     }
 
     private void OnHealthChanged(float prev, float curr)

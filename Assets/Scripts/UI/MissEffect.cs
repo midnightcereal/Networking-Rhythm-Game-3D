@@ -10,7 +10,7 @@ public class MissEffect : MonoBehaviour
     [Header("Flash Effect Settings")]
     public Image imageOverlay;
     public TextMeshProUGUI gameOverText;
-    public Color flashColor = new Color(1f, 0f, 0f, 0.6f);
+    public Color flashColor = new Color(0f, 0f, 0f, 0.6f);
     public float flashDuration = 0.3f;
 
     private Coroutine flashRoutine;

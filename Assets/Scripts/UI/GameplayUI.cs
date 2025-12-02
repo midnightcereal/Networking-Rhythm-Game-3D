@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
+using UnityEditor.Playables;
 using UnityEngine;
 using UnityEngine.UI;
 using static PlayerStats;
@@ -14,6 +15,18 @@ public class GameplayUI : NetworkBehaviour
     public TMPro.TextMeshProUGUI leftPlayerNameText;
     public TMPro.TextMeshProUGUI rightPlayerNameText;
     private readonly Dictionary<ulong, string> basePlayerNames = new();
+
+    [Header("Ability Feedback")]
+    public TextMeshProUGUI leftAbilityText;
+    public TextMeshProUGUI rightAbilityText;
+
+    private string[] abilityNames = new string[]
+    {
+    "",
+    "HEALTH REGEN BURST",
+    "SCREEN BLUR",
+    "HIDE HITLINE"
+    };
 
     [Header("Player 1 - Left Side")]
     public Slider leftComboSlider;
@@ -90,11 +103,6 @@ public class GameplayUI : NetworkBehaviour
         }
     }
 
-    public override void OnNetworkDespawn()
-    {
-        PlayerNameManager.OnPlayerNameReceived -= HandlePlayerNameReceived;
-    }
-
     private void SetupSlider(Slider slider, float maxValue, float startValue)
     {
         if (slider != null)
@@ -106,16 +114,20 @@ public class GameplayUI : NetworkBehaviour
         }
     }
 
-    private void HandlePlayerNameReceived(ulong clientId, string name)
+    public void SetAbilityReadyText(int side, string text)
     {
-        int side = GetPlayerSide(clientId);
+        if (side == 0 && leftAbilityText)
+            leftAbilityText.text = text;
+        else if (side == 1 && rightAbilityText)
+            rightAbilityText.text = text;
+    }
 
-        if (side == 0 && leftPlayerNameText)
-            leftPlayerNameText.text = name;
-        else if (side == 1 && rightPlayerNameText)
-            rightPlayerNameText.text = name;
-
-        Debug.Log($"[GameplayUI] {name} assigned to {(side == 0 ? "LEFT" : "RIGHT")} (Client {clientId})");
+    public void ClearAbilityText(int side)
+    {
+        if (side == 0 && leftAbilityText)
+            leftAbilityText.text = "";
+        else if (side == 1 && rightAbilityText)
+            rightAbilityText.text = "";
     }
 
     ///<summary>Called from PlayerStats when values change</summary>
@@ -131,6 +143,8 @@ public class GameplayUI : NetworkBehaviour
         comboSlider.value = combo;
         healthSlider.value = health;
 
+        var ability = ComboAbilityManager.Instance;
+
         if (health <= 0f)
             healthSlider.gameObject.SetActive(false);
         else if (!healthSlider.gameObject.activeSelf)
@@ -139,13 +153,13 @@ public class GameplayUI : NetworkBehaviour
         if (fill != null && background != null)
         {
             int currentMilestone = 0;
-            if (combo >= 7) currentMilestone = 7;
-            else if (combo >= 5) currentMilestone = 5;
-            else if (combo >= 3) currentMilestone = 3;
+            if (combo >= ability.unlockPoint3) currentMilestone = ability.unlockPoint3;
+            else if (combo >= ability.unlockPoint2) currentMilestone = ability.unlockPoint2;
+            else if (combo >= ability.unlockPoint1) currentMilestone = ability.unlockPoint1;
 
             int lastMilestone = side == 0 ? lastMilestoneLeft : lastMilestoneRight;
 
-            if (currentMilestone != lastMilestone || (combo < 3 && lastMilestone >= 3))
+            if (currentMilestone != lastMilestone || (combo < ability.unlockPoint1 && lastMilestone >= ability.unlockPoint1))
             {
                 Color targetFill = currentMilestone switch
                 {
@@ -159,11 +173,17 @@ public class GameplayUI : NetworkBehaviour
 
                 if (side == 0) lastMilestoneLeft = currentMilestone;
                 else lastMilestoneRight = currentMilestone;
+
+                //Notify LOCAL ability system
+                if (clientId == NetworkManager.Singleton.LocalClientId)
+                {
+                    ComboAbilityManager.Instance.CheckAbilityUnlock(combo);
+                }
             }
         }
     }
 
-    private int GetPlayerSide(ulong clientId)
+    public int GetPlayerSide(ulong clientId)
     {
         if (!playerSide.ContainsKey(clientId))
         {
