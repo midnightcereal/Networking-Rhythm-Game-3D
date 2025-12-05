@@ -52,6 +52,7 @@ public class SongManager : MonoBehaviour
 
     private SongData songData;
     private List<GameObject> spawnedNotes = new List<GameObject>();
+    private bool songEnded = false;
 
     private void Start()
     {
@@ -130,5 +131,29 @@ public class SongManager : MonoBehaviour
 
         if (audioSource != null && audioSource.clip != null)
             audioSource.Play();
+    }
+
+    private void Update()
+    {
+        if (songEnded || audioSource == null || audioSource.clip == null || !audioSource.isPlaying) return;
+
+        //Song is considered ended when within 0.2s of end
+        if (audioSource.time >= audioSource.clip.length - 0.2f)
+        {
+            songEnded = true;
+            OnSongEnd();
+        }
+    }
+
+    //Called automatically when song ends
+    private void OnSongEnd()
+    {
+        Debug.Log("SONG ENDED — Showing Results");
+
+        if (ResultsManager.Instance != null)
+        {
+            Debug.Log("SONG ENDED -> Submitting results");
+            ResultsManager.Instance.SubmitLocalResults();
+        }
     }
 }

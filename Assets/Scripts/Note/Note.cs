@@ -83,6 +83,13 @@ public class Note : MonoBehaviour
         if (isHit) return;
         isHit = true;
 
+        //LOGIC TO BE VERIFIED!
+        float dist = Mathf.Abs(transform.position.y - hitLine.position.y);
+        bool isPerfect = dist <= 0.05f;
+
+        ResultsManager.Instance.RegisterHit(isPerfect);
+        Debug.Log("[ResultsManager] Registered Hit, PERFECT?: " + isPerfect);
+
         if (isHold)
         {
             isHolding = true;
@@ -160,6 +167,9 @@ public class Note : MonoBehaviour
 
     private void Miss()
     {
+        ResultsManager.Instance.RegisterMiss();
+        Debug.Log("[ResultsManager] Registered Miss");
+
         transform.localScale = originalScale;
         Destroy(gameObject);
         ComboManager.Instance.ResetCombo();

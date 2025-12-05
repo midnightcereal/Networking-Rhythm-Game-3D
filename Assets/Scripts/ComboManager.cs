@@ -9,6 +9,11 @@ public class ComboManager : MonoBehaviour
     public static ComboManager Instance;
     private PlayerStats playerStats;
 
+    [Header("Sound Effects")]
+    //public AudioClip hitSound;
+    public AudioClip missSound;
+    public AudioSource audioSource;
+
     [Header("Combo UI")]
     public TextMeshProUGUI comboText;
     public float tapBounceDuration = 0.2f;     //single tap bounce duration
@@ -72,6 +77,11 @@ public class ComboManager : MonoBehaviour
     public void AddCombo(bool isHold, Note note = null)
     {
         combo++;
+
+        //Play Hit SFX - TOO DISTRACTING
+        //if (audioSource && hitSound)
+        //    audioSource.PlayOneShot(hitSound);
+
         //Network the combo increase
         if (playerStats != null) playerStats.UpdateComboServerRpc(combo);
         UpdateComboText();
@@ -92,6 +102,10 @@ public class ComboManager : MonoBehaviour
     ///</summary>
     public void ResetCombo()
     {
+        //Play Miss SFX only when combo breaks
+        if (combo > 1 && audioSource && missSound)
+            audioSource.PlayOneShot(missSound);
+
         //Network health loss
         if (combo > 0 && playerStats != null)
         {
@@ -120,6 +134,9 @@ public class ComboManager : MonoBehaviour
 
         if (combo > 1)
         {
+            ResultsManager.Instance.OnComboBreak();
+            Debug.Log("[ResultsManager] Registered Combo Break");
+
             //Flash Screen
             MissEffect missEffect = FindObjectOfType<MissEffect>();
             if (missEffect != null)

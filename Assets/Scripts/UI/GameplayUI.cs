@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using Unity.Netcode;
-using UnityEditor.Playables;
 using UnityEngine;
 using UnityEngine.UI;
 using static PlayerStats;
@@ -177,6 +176,7 @@ public class GameplayUI : NetworkBehaviour
                 //Notify LOCAL ability system
                 if (clientId == NetworkManager.Singleton.LocalClientId)
                 {
+                    Debug.Log("Calling MILESTONE update");
                     ComboAbilityManager.Instance.CheckAbilityUnlock(combo);
                 }
             }

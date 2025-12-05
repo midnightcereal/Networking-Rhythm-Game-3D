@@ -39,7 +39,7 @@ public class ComboAbilityManager : NetworkBehaviour
     ///<summary>Called from GameplayUI when LOCAL combo updates</summary>
     public void CheckAbilityUnlock(int combo)
     {
-        if (!IsSpawned || !IsOwner) return;
+        //if (!IsSpawned || !IsOwner) return;
 
         int milestone = GetCurrentMilestone(combo);
         Debug.Log("MILESTONE: " + milestone);
