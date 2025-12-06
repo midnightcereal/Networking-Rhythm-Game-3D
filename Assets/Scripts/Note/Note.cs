@@ -21,12 +21,12 @@ public class Note : MonoBehaviour
 
     [HideInInspector] public float speedMultiplier = 0.1f;
     private float songTimer = 0f;
-    private AudioSource audioSource;
+    //private AudioSource audioSource;
 
     private void Start()
     {
         originalScale = transform.localScale;
-        audioSource = FindObjectOfType<AudioSource>();
+        //audioSource = FindObjectOfType<AudioSource>();
 
         if (isHold && holdDuration > 0f)
         {
@@ -45,7 +45,7 @@ public class Note : MonoBehaviour
 
     private void Update()
     {
-        if (!audioSource) return;
+        //if (!audioSource) return;
 
         songTimer += Time.deltaTime;
 

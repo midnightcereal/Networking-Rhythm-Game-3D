@@ -129,20 +129,21 @@ public class SongManager : MonoBehaviour
     {
         yield return new WaitForSeconds(Mathf.Abs(preRollSeconds));
 
+        //Causes brief freeze at start - ok because no notes at start of songs
         if (audioSource != null && audioSource.clip != null)
             audioSource.Play();
     }
 
     private void Update()
     {
-        if (songEnded || audioSource == null || audioSource.clip == null || !audioSource.isPlaying) return;
+        //if (songEnded || audioSource == null || audioSource.clip == null || !audioSource.isPlaying) return;
 
-        //Song is considered ended when within 0.2s of end
-        if (audioSource.time >= audioSource.clip.length - 0.2f)
-        {
-            songEnded = true;
-            OnSongEnd();
-        }
+        ////Song is considered ended when within 0.2s of end
+        //if (audioSource.time >= audioSource.clip.length)
+        //{
+        //    songEnded = true;
+        //    OnSongEnd();
+        //}
     }
 
     //Called automatically when song ends
@@ -153,7 +154,7 @@ public class SongManager : MonoBehaviour
         if (ResultsManager.Instance != null)
         {
             Debug.Log("SONG ENDED -> Submitting results");
-            ResultsManager.Instance.SubmitLocalResults();
+            //ResultsManager.Instance.SubmitLocalResults();
         }
     }
 }

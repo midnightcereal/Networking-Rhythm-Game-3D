@@ -15,21 +15,21 @@ public class ResultsManager : NetworkBehaviour
     private AudioSource songAudioSource;
     private SongManager songManager;
 
-    //LOCAL stats per player (each player tracks their own)
+    //Local stats
     private int localHits = 0;
     private int localPerfects = 0;
     private int localMisses = 0;
     private int localMaxCombo = 0;
     private int currentCombo = 0;
 
-    //Final synced stats
-    private readonly int[] finalHits = new int[2];
-    private readonly int[] finalPerfects = new int[2];
-    private readonly int[] finalMisses = new int[2];
-    private readonly int[] finalMaxCombo = new int[2];
+    //Final stats (filled by server)
+    public int p1Hits, p1Perfects, p1Misses, p1MaxCombo;
+    public int p2Hits, p2Perfects, p2Misses, p2MaxCombo;
 
-    private int playersReported = 0;
-    private bool songEnded = false;
+    public int playersSubmitted = 0;
+    public bool hasSubmitted = false;
+    public bool hasShownResults = false;
+    public bool hasSongEnded = false;
 
     private void Awake()
     {
@@ -41,40 +41,152 @@ public class ResultsManager : NetworkBehaviour
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        if (resultsCanvas) resultsCanvas.SetActive(false);
+        //Force spawn the net object - this caused issues because it wasn't "spawning"
+        var netObj = GetComponent<NetworkObject>();
+        if (netObj != null && !netObj.IsSpawned)
+        {
+            if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
+            {
+                netObj.Spawn();
+                Debug.Log("[ResultsManager] Auto spawned the network object");
+            }
+        }
+
+        resultsCanvas.SetActive(false);
     }
 
     private void Start()
     {
-        songManager = FindObjectOfType<SongManager>();
-        if (songManager != null)
+        StartCoroutine(FindSongManagerRoutine());
+    }
+
+    private IEnumerator FindSongManagerRoutine()
+    {
+        while (songManager == null || songAudioSource == null)
         {
-            songAudioSource = songManager.audioSource;
-        }
-        else
-        {
-            Debug.LogError("ResultsManager: SongManager not found!");
+            songManager = FindObjectOfType<SongManager>();
+            if (songManager != null && songManager.audioSource != null)
+            {
+                songAudioSource = songManager.audioSource;
+                break;
+            }
+            yield return new WaitForSeconds(0.1f);
         }
     }
 
     private void Update()
     {
-        if (songEnded || songAudioSource == null || songAudioSource.clip == null) return;
+        if (songAudioSource == null || songAudioSource.clip == null) return;
 
-        if (songAudioSource.time >= songAudioSource.clip.length - 0.2f)
+        float remaining = songAudioSource.clip.length - songAudioSource.time;
+
+        //ONLY HOST decides when song ends CHANGE TO 0.2f
+        if (IsHost && remaining <= 83f && !hasSubmitted)
         {
-            songEnded = true;
-            //Song ended -> local player submits their stats
-            SubmitLocalResults();
+            hasSubmitted = true;
+            Debug.Log("[ResultsManager] HOST ENDED SONG — COLLECTING STATS AND SHOWING RESULTS");
+
+            //Host collects their own stats
+            int mySide = GameplayUI.Instance.GetPlayerSide(NetworkManager.Singleton.LocalClientId);
+            if (mySide == 0)
+            {
+                p1Hits = localHits;
+                p1Perfects = localPerfects;
+                p1Misses = localMisses;
+                p1MaxCombo = localMaxCombo;
+            }
+            else
+            {
+                p2Hits = localHits;
+                p2Perfects = localPerfects;
+                p2Misses = localMisses;
+                p2MaxCombo = localMaxCombo;
+            }
+
+            //Host asks client for stats
+            RequestClientStatsClientRpc();
+
+            //Host shows results immediately
+            StartCoroutine(ShowResultsAfterDelay());
         }
     }
 
-    //Called from Note.Hit() and Note.Miss()
+    [ClientRpc]
+    private void RequestClientStatsClientRpc()
+    {
+        //THIS IS NOT BEING CALLED ON CLIENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        Debug.Log("HOST ASKED FOR CLIENT RPC");
+        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        if (IsHost) return; //Host already submitted
+        Debug.Log("HOST ASKED FOR CLIENT RPC - PASSED HOST CHECK");
+
+        if (!hasSubmitted)
+        {
+            Debug.Log("DELIVERED CLIENT RPC");
+            hasSubmitted = true;
+            int mySide = GameplayUI.Instance.GetPlayerSide(NetworkManager.Singleton.LocalClientId);
+            SubmitClientStatsServerRpc(localHits, localPerfects, localMisses, localMaxCombo, mySide);
+        }
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void SubmitClientStatsServerRpc(int hits, int perfects, int misses, int maxCombo, int side)
+    {
+        if (side == 0)
+        {
+            p1Hits = hits;
+            p1Perfects = perfects;
+            p1Misses = misses;
+            p1MaxCombo = maxCombo;
+        }
+        else
+        {
+            p2Hits = hits;
+            p2Perfects = perfects;
+            p2Misses = misses;
+            p2MaxCombo = maxCombo;
+        }
+    }
+
+    private IEnumerator ShowResultsAfterDelay()
+    {
+        yield return new WaitForSeconds(1.5f);
+
+        resultsCanvas.SetActive(true);
+
+        string leftName = GetPlayerNameForSide(0);
+        string rightName = GetPlayerNameForSide(1);
+
+        string left = $"{leftName}\nHits: {p1Hits}\nPerfect: {p1Perfects}\nMisses: {p1Misses}\nMax Combo: {p1MaxCombo}";
+        string right = $"{rightName}\nHits: {p2Hits}\nPerfect: {p2Perfects}\nMisses: {p2Misses}\nMax Combo: {p2MaxCombo}";
+
+        if (leftResultsText) leftResultsText.text = left;
+        if (rightResultsText) rightResultsText.text = right;
+    }
+
+    private string GetPlayerNameForSide(int side)
+    {
+        if (GameplayUI.Instance == null) return "PLAYER";
+
+        foreach (var kvp in GameplayUI.Instance.playerSide)
+        {
+            if (kvp.Value == side)
+            {
+                string baseName = "PLAYER";
+                if (GameplayUI.Instance.basePlayerNames.TryGetValue(kvp.Key, out string name))
+                    baseName = name;
+
+                bool isLocal = kvp.Key == NetworkManager.Singleton.LocalClientId;
+                return isLocal ? $"{baseName} (You)" : baseName;
+            }
+        }
+        return "PLAYER";
+    }
+
     public void RegisterHit(bool isPerfect)
     {
         localHits++;
         if (isPerfect) localPerfects++;
-
         currentCombo++;
         if (currentCombo > localMaxCombo) localMaxCombo = currentCombo;
     }
@@ -85,64 +197,5 @@ public class ResultsManager : NetworkBehaviour
         currentCombo = 0;
     }
 
-    public void OnComboBreak()
-    {
-        currentCombo = 0;
-    }
-
-    ///<summary>Called when song ends — each player submits their own stats</summary>
-    public void SubmitLocalResults()
-    {
-        if (!IsClient) return;
-
-        //Send to server
-        SubmitStatsServerRpc(localHits, localPerfects, localMisses, localMaxCombo);
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void SubmitStatsServerRpc(int hits, int perfects, int misses, int maxCombo, ServerRpcParams rpcParams = default)
-    {
-        ulong clientId = rpcParams.Receive.SenderClientId;
-        int side = GameplayUI.Instance.GetPlayerSide(clientId);
-
-        finalHits[side] = hits;
-        finalPerfects[side] = perfects;
-        finalMisses[side] = misses;
-        finalMaxCombo[side] = maxCombo;
-
-        playersReported++;
-
-        if (playersReported >= 2)
-        {
-            ShowResultsClientRpc();
-        }
-    }
-
-    [ClientRpc]
-    private void ShowResultsClientRpc()
-    {
-        StartCoroutine(ShowResultsWithDelay());
-    }
-
-    private IEnumerator ShowResultsWithDelay()
-    {
-        yield return new WaitForSeconds(1.5f);
-
-        resultsCanvas.SetActive(true);
-
-        string left = $"LEFT PLAYER\n" +
-                     $"Hits: {finalHits[0]}\n" +
-                     $"Perfect: {finalPerfects[0]}\n" +
-                     $"Misses: {finalMisses[0]}\n" +
-                     $"Max Combo: {finalMaxCombo[0]}";
-
-        string right = $"RIGHT PLAYER\n" +
-                      $"Hits: {finalHits[1]}\n" +
-                      $"Perfect: {finalPerfects[1]}\n" +
-                      $"Misses: {finalMisses[1]}\n" +
-                      $"Max Combo: {finalMaxCombo[1]}";
-
-        if (leftResultsText) leftResultsText.text = left;
-        if (rightResultsText) rightResultsText.text = right;
-    }
+    public void OnComboBreak() => currentCombo = 0;
 }

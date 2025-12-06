@@ -52,7 +52,7 @@ public class PlayerStats : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void UpdateComboServerRpc(int newCombo)
     {
-        Debug.Log($"[PlayerStats] ServerRpc: UpdateComboServerRpc({newCombo}) from Client {OwnerClientId}");
+        //Debug.Log($"[PlayerStats] ServerRpc: UpdateComboServerRpc({newCombo}) from Client {OwnerClientId}");
         Combo.Value = newCombo;
     }
 

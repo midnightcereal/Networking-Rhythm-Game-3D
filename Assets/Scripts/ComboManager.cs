@@ -26,9 +26,14 @@ public class ComboManager : MonoBehaviour
     private Coroutine holdCoroutine;
     private bool isHolding = false;
 
+    private MissEffect cachedMissEffect;
+
     private void Awake()
     {
         Instance = this;
+
+        cachedMissEffect = FindObjectOfType<MissEffect>();
+
         if (comboText != null)
             originalPos = comboText.transform.localPosition;
 
@@ -129,7 +134,7 @@ public class ComboManager : MonoBehaviour
         }
         else
         {
-            Debug.Log("[ComboManager] No health deduction - combo = 0 or playerStats missing");
+            //Debug.Log("[ComboManager] No health deduction - combo = 0 or playerStats missing");
         }
 
         if (combo > 1)
@@ -138,9 +143,8 @@ public class ComboManager : MonoBehaviour
             Debug.Log("[ResultsManager] Registered Combo Break");
 
             //Flash Screen
-            MissEffect missEffect = FindObjectOfType<MissEffect>();
-            if (missEffect != null)
-                missEffect.TriggerMissFlash();
+            if (cachedMissEffect != null)
+                cachedMissEffect.TriggerMissFlash();
         }
 
         combo = 0;

@@ -13,7 +13,7 @@ public class GameplayUI : NetworkBehaviour
     [Header("Player Names")]
     public TMPro.TextMeshProUGUI leftPlayerNameText;
     public TMPro.TextMeshProUGUI rightPlayerNameText;
-    private readonly Dictionary<ulong, string> basePlayerNames = new();
+    public readonly Dictionary<ulong, string> basePlayerNames = new();
 
     [Header("Ability Feedback")]
     public TextMeshProUGUI leftAbilityText;
@@ -54,7 +54,7 @@ public class GameplayUI : NetworkBehaviour
     private int lastMilestoneLeft = 0;
     private int lastMilestoneRight = 0;
 
-    private Dictionary<ulong, int> playerSide = new();
+    public Dictionary<ulong, int> playerSide = new();
 
     public override void OnNetworkSpawn()
     {
