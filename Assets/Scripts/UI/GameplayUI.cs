@@ -16,8 +16,7 @@ public class GameplayUI : NetworkBehaviour
     public readonly Dictionary<ulong, string> basePlayerNames = new();
 
     [Header("Ability Feedback")]
-    public TextMeshProUGUI leftAbilityText;
-    public TextMeshProUGUI rightAbilityText;
+    public TextMeshProUGUI abilityText;
 
     private string[] abilityNames = new string[]
     {
@@ -113,20 +112,32 @@ public class GameplayUI : NetworkBehaviour
         }
     }
 
-    public void SetAbilityReadyText(int side, string text)
+    public void SetLocalAbilityReadyText(int combo)
     {
-        if (side == 0 && leftAbilityText)
-            leftAbilityText.text = text;
-        else if (side == 1 && rightAbilityText)
-            rightAbilityText.text = text;
+        Debug.Log("MILESTONE SetLocalAbilityReadyText Called");
+        int milestone = ComboAbilityManager.Instance.GetCurrentMilestone(combo);
+        if (milestone <= 0)
+        {
+            ClearAbilityText();
+            Debug.Log("MILESTONE Cleared Text");
+            return;
+        }
+
+        string abilityName = milestone switch
+        {
+            1 => "HEALTH REGEN BURST",
+            2 => "SCREEN BLUR",
+            3 => "HIDE HITLINE",
+            _ => ""
+        };
+
+        Debug.Log("MILESTONE SetAbilityReadyText Called");
+        abilityText.text = $"PRESS SPACE TO USE\n{abilityName}";
     }
 
-    public void ClearAbilityText(int side)
+    public void ClearAbilityText()
     {
-        if (side == 0 && leftAbilityText)
-            leftAbilityText.text = "";
-        else if (side == 1 && rightAbilityText)
-            rightAbilityText.text = "";
+        abilityText.text = "";
     }
 
     ///<summary>Called from PlayerStats when values change</summary>
@@ -177,7 +188,7 @@ public class GameplayUI : NetworkBehaviour
                 if (clientId == NetworkManager.Singleton.LocalClientId)
                 {
                     Debug.Log("Calling MILESTONE update");
-                    ComboAbilityManager.Instance.CheckAbilityUnlock(combo);
+                    SetLocalAbilityReadyText(combo);
                 }
             }
         }
@@ -203,9 +214,7 @@ public class GameplayUI : NetworkBehaviour
         healthSlider.gameObject.SetActive(false);
     }
 
-    ///<summary>
-    ///Called from ComboManager when health is deducted
-    ///</summary>
+    ///<summary>Called from ComboManager when health is deducted</summary>
     public void ShowDamagePopup(ulong clientId, float damageAmount)
     {
         if (damageTextPrefab == null) return;
@@ -219,7 +228,7 @@ public class GameplayUI : NetworkBehaviour
         if (text != null)
         {
             text.text = $"-{damageAmount:F0}";
-            text.color = damageAmount >= 10f ? Color.red : new Color(1f, 0.5f, 0f); // Orange for 5
+            text.color = Color.red;
             StartCoroutine(AnimateDamagePopup(popupObj));
         }
     }

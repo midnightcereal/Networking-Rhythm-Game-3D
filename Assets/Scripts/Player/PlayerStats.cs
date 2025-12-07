@@ -30,8 +30,7 @@ public class PlayerStats : NetworkBehaviour
     {
         Debug.Log($"[PlayerStats] COMBO CHANGED: {prev} -> {curr} (Client {OwnerClientId})");
         GameplayUI.Instance?.UpdatePlayer(OwnerClientId, curr, Health.Value);
-        int side = GameplayUI.Instance.GetPlayerSide(OwnerClientId);
-        GameplayUI.Instance.ClearAbilityText(side);
+        //GameplayUI.Instance.ClearAbilityText();
     }
 
     private void OnHealthChanged(float prev, float curr)
@@ -59,9 +58,9 @@ public class PlayerStats : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void DeductHealthServerRpc(int previousCombo)
     {
-        float deduction = 10f;
+        float deduction = 5f;
         if (previousCombo > 100) deduction = 1f;
-        else if (previousCombo > 30) deduction = 5f;
+        else if (previousCombo > 30) deduction = 2f;
         Health.Value = Mathf.Max(0f, Health.Value - deduction);
     }
 
@@ -75,6 +74,6 @@ public class PlayerStats : NetworkBehaviour
     public void ShowDamagePopupClientRpc(ulong clientId, float damageAmount)
     {
         GameplayUI.Instance?.ShowDamagePopup(clientId, damageAmount);
-        MissEffect.Instance?.TriggerMissFlash(); // Flash on both clients!
+        MissEffect.Instance?.TriggerMissFlash();
     }
 }

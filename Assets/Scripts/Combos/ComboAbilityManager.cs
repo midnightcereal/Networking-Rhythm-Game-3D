@@ -1,30 +1,22 @@
 using System.Collections;
-using System.Globalization;
-using TMPro;
 using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class ComboAbilityManager : NetworkBehaviour
 {
     public static ComboAbilityManager Instance { get; private set; }
 
-    [Header("Ability Unlock Values")]
+    [Header("Ability Unlock Thresholds")]
     public int unlockPoint1 = 3;
     public int unlockPoint2 = 5;
     public int unlockPoint3 = 7;
 
-    [Header("Local UI References - Assign in Inspector")]
-    public TextMeshProUGUI localAbilityText;
-    public GameObject localHitline;
-    public Image localScreenBlurOverlay;
-
     [Header("Ability Settings")]
-    public float screenBlurDuration = 2.0f;
-    public float hitlineHideDuration = 2.5f;
     public float regenAmount = 30f;
     public float regenPerSecond = 5f;
     public float regenDuration = 5f;
+    public float screenBlurDuration = 2f;
+    public float hitlineHideDuration = 2.5f;
 
     private void Awake()
     {
@@ -36,29 +28,80 @@ public class ComboAbilityManager : NetworkBehaviour
         Instance = this;
     }
 
-    ///<summary>Called from GameplayUI when LOCAL combo updates</summary>
-    public void CheckAbilityUnlock(int combo)
+    ///<summary>Called by local input to try use an ability, sends a ServerRpc to the host if not host</summary>
+    public void TryUseAbility(int combo, ulong clientId)
     {
-        //if (!IsSpawned || !IsOwner) return;
-
         int milestone = GetCurrentMilestone(combo);
-        Debug.Log("MILESTONE: " + milestone);
-        if (milestone > 0 && localAbilityText != null)
+
+        if (milestone == 0)
         {
-            Debug.Log("HIT MILESTONE");
-            string abilityName = milestone switch
-            {
-                1 => "HEALTH REGEN BURST",
-                2 => "SCREEN BLUR",
-                3 => "HIDE HITLINE",
-                _ => ""
-            };
-            localAbilityText.text = $"PRESS SPACE TO USE\n{abilityName}";
+            Debug.Log("[ComboAbility] No ability ready");
+            return;
         }
-        else if (localAbilityText != null)
+
+        Debug.Log($"[ComboAbility] Milestone {milestone} reached! Pressed SPACE.");
+
+        //Clear the local ability UI immediately
+        if (clientId == NetworkManager.Singleton.LocalClientId)
         {
-            localAbilityText.text = "";
+            GameplayUI.Instance.ClearAbilityText();
         }
+
+        //Execute ability via network
+        if (NetworkManager.Singleton.IsHost)
+        {
+            //Host executes directly
+            HostUseAbility(clientId, combo);
+        }
+        else
+        {
+            //Non host client requests host to execute
+            RequestAbilityServerRpc(clientId, combo);
+        }
+    }
+
+
+    ///<summary>ServerRpc called by client to request ability usage</summary>
+    [ServerRpc(RequireOwnership = false)]
+    private void RequestAbilityServerRpc(ulong clientId, int combo)
+    {
+        HostUseAbility(clientId, combo);
+    }
+
+    ///<summary>Host applies the ability effect and triggers ClientRpc for visuals</summary>
+    private void HostUseAbility(ulong clientId, int combo)
+    {
+        int milestone = GetCurrentMilestone(combo);
+        if (milestone == 0) return;
+
+        var stats = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.GetComponent<PlayerStats>();
+        if (stats == null) return;
+
+        //Reset combo
+        stats.Combo.Value = 0;
+
+        //Execute ability
+        switch (milestone)
+        {
+            case 1: //Health regen self
+                ApplyHealthRegenClientRpc(clientId);
+                break;
+            case 2: //Screen blur opponent
+                ulong opponentId = GetOpponentId(clientId);
+                ApplyScreenBlurClientRpc(opponentId);
+                break;
+            case 3: //Hide hitline opponent
+                ulong opponent2Id = GetOpponentId(clientId);
+                ApplyHitlineHideClientRpc(opponent2Id);
+                break;
+        }
+    }
+
+    private ulong GetOpponentId(ulong clientId)
+    {
+        foreach (var kvp in NetworkManager.Singleton.ConnectedClients)
+            if (kvp.Key != clientId) return kvp.Key;
+        return clientId; //fallback to self if single player
     }
 
     public int GetCurrentMilestone(int combo)
@@ -69,74 +112,12 @@ public class ComboAbilityManager : NetworkBehaviour
         return 0;
     }
 
-    public void TryUseAbility()
-    {
-        //if (!IsOwner) return;
-
-        int currentCombo = ComboManager.Instance?.combo ?? 0;
-        int milestone = GetCurrentMilestone(currentCombo);
-
-        if (milestone > 0)
-        {
-            Debug.Log($"[ComboAbility] Using ability level {milestone} at combo {currentCombo}");
-            UseAbilityServerRpc();
-        }
-        else
-        {
-            Debug.Log("[ComboAbility] No ability ready");
-        }
-    }
-
-    //Called when press Space
-    [ServerRpc(RequireOwnership = false)]
-    public void UseAbilityServerRpc(ServerRpcParams rpcParams = default)
-    {
-        Debug.Log("ComboAbility Called UseAbilityServerRpc");
-        ulong clientId = rpcParams.Receive.SenderClientId;
-        var stats = NetworkManager.Singleton.ConnectedClients[clientId]
-                    .PlayerObject?.GetComponent<PlayerStats>();
-        Debug.Log("ComboAbility Retrieved Stats: " + stats);
-        if (stats == null) return;
-        Debug.Log("ComboAbility Retrieved Stats Successfully");
-        int milestone = GetCurrentMilestone(stats.Combo.Value);
-        Debug.Log("ComboAbility Milestone: " + milestone);
-        if (milestone == 0) return;
-        Debug.Log("ComboAbility Milestone Success");
-        //Reset combo
-        stats.Combo.Value = 0;
-
-        //Apply LOCAL effect to correct player
-        switch (milestone)
-        {
-            case 1: //Health Regen (self)
-                Debug.Log("ComboAbility Called Health Regen");
-                ApplyHealthRegenClientRpc(clientId);
-                break;
-            case 2: //Screen Blur
-                Debug.Log("ComboAbility Called Screen Blur");
-                ulong opponent = GetOpponentId(clientId);
-                ApplyScreenBlurClientRpc(opponent);
-                break;
-            case 3: //Hide Hitline
-                Debug.Log("ComboAbility Called Hide Hitline");
-                ulong opponent2 = GetOpponentId(clientId);
-                ApplyHitlineHideClientRpc(opponent2);
-                break;
-        }
-    }
-
-    private ulong GetOpponentId(ulong clientId)
-    {
-        foreach (var kvp in NetworkManager.Singleton.ConnectedClients)
-            if (kvp.Key != clientId) return kvp.Key;
-        return clientId;
-    }
+    #region ClientRpc Effects
 
     [ClientRpc]
     private void ApplyHealthRegenClientRpc(ulong targetClientId)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
-        Debug.Log("ComboAbility Used Health Regen");
         StartCoroutine(HealthRegenCoroutine());
     }
 
@@ -144,17 +125,21 @@ public class ComboAbilityManager : NetworkBehaviour
     private void ApplyScreenBlurClientRpc(ulong targetClientId)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
-        Debug.Log("ComboAbility Used Screen Blur");
-        StartCoroutine(ScreenBlurCoroutine());
+        //CALL UI BLUR HERE
+        Debug.Log("[ComboAbility] Screen Blur triggered for client " + targetClientId);
     }
 
     [ClientRpc]
     private void ApplyHitlineHideClientRpc(ulong targetClientId)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
-        Debug.Log("ComboAbility Hid Hitline");
-        StartCoroutine(HitlineHideCoroutine());
+        //CALL HIDE HITLINE HERE
+        Debug.Log("[ComboAbility] Hitline Hide triggered for client " + targetClientId);
     }
+
+    #endregion
+
+    #region Local Coroutines
 
     private IEnumerator HealthRegenCoroutine()
     {
@@ -170,24 +155,5 @@ public class ComboAbilityManager : NetworkBehaviour
         }
     }
 
-    private IEnumerator ScreenBlurCoroutine()
-    {
-        if (localScreenBlurOverlay != null)
-        {
-            localScreenBlurOverlay.gameObject.SetActive(true);
-            yield return new WaitForSeconds(screenBlurDuration);
-            localScreenBlurOverlay.gameObject.SetActive(false);
-        }
-    }
-
-    private IEnumerator HitlineHideCoroutine()
-    {
-        if (localHitline == null) yield break;
-
-        localHitline.gameObject.SetActive(false);
-
-        yield return new WaitForSeconds(hitlineHideDuration);
-
-        localHitline.gameObject.SetActive(true);
-    }
+    #endregion
 }

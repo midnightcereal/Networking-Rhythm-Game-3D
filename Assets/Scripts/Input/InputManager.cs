@@ -1,3 +1,4 @@
+using Unity.Netcode;
 using UnityEngine;
 
 public class InputManager : MonoBehaviour
@@ -39,10 +40,10 @@ public class InputManager : MonoBehaviour
                 ReleaseHold(lane);
             }
 
-            //Ability Input
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                ComboAbilityManager.Instance?.TryUseAbility();
+                int currentCombo = ComboManager.Instance?.combo ?? 0;
+                ComboAbilityManager.Instance?.TryUseAbility(currentCombo, NetworkManager.Singleton.LocalClientId);
             }
         }
     }

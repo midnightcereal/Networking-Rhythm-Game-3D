@@ -55,26 +55,15 @@ public class GameSceneManager : NetworkBehaviour
     {
         if (localRhythmPrefab == null)
         {
-            Debug.LogError("Local rhythm prefab not assigned in GameSceneManager!");
+            Debug.LogError("Local rhythm prefab not assigned!");
             return;
         }
 
         if (localRhythmInstance != null)
-        {
             Destroy(localRhythmInstance);
-        }
 
         localRhythmInstance = Instantiate(localRhythmPrefab);
         Debug.Log("Spawned local rhythm setup for local client");
-
-        //Spawn NetworkObject on ComboAbilityManager child
-        var comboAbilityObj = localRhythmInstance.GetComponentInChildren<ComboAbilityManager>().gameObject;
-        var netObj = comboAbilityObj.GetComponent<NetworkObject>();
-        if (netObj != null && !netObj.IsSpawned)
-        {
-            netObj.Spawn();
-            Debug.Log("Spawned ComboAbilityManager NetworkObject");
-        }
     }
 
     [ClientRpc]
@@ -88,12 +77,10 @@ public class GameSceneManager : NetworkBehaviour
     private IEnumerator CountdownStart(double startTime)
     {
         double remaining = startTime - NetworkManager.ServerTime.Time;
-
         if (remaining > 0)
             yield return new WaitForSeconds((float)remaining);
 
         Debug.Log("Starting song intro!");
-
         SongManager songManager = FindObjectOfType<SongManager>();
         SongIntroUI introUI = FindObjectOfType<SongIntroUI>();
 
@@ -107,15 +94,7 @@ public class GameSceneManager : NetworkBehaviour
 
         if (introUI != null && songData != null)
         {
-            string songTitle = songData.songName;
-            string artist = songData.artist;
-            int difficulty = songData.difficulty;
-
-            yield return introUI.PlayIntroSequence(songTitle, artist, difficulty);
-        }
-        else
-        {
-            Debug.LogWarning("No SongIntroUI found or SongData missing, skipping intro.");
+            yield return introUI.PlayIntroSequence(songData.songName, songData.artist, songData.difficulty);
         }
 
         songManager.BeginSong();

@@ -51,7 +51,7 @@ public class MissEffect : MonoBehaviour
         isGameOver = true;
 
         if (imageOverlay != null)
-            imageOverlay.color = new Color(1f, 0f, 0f, 0.4f);
+            imageOverlay.color = new Color(0.5f, 0.5f, 0.5f, 0.5f);
 
     gameOverText.enabled = true;
         Debug.Log("[MissEffect] Permanent GAME OVER flash activated!");
