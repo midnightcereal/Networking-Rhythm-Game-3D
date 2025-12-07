@@ -66,6 +66,15 @@ public class GameSceneManager : NetworkBehaviour
 
         localRhythmInstance = Instantiate(localRhythmPrefab);
         Debug.Log("Spawned local rhythm setup for local client");
+
+        //Spawn NetworkObject on ComboAbilityManager child
+        var comboAbilityObj = localRhythmInstance.GetComponentInChildren<ComboAbilityManager>().gameObject;
+        var netObj = comboAbilityObj.GetComponent<NetworkObject>();
+        if (netObj != null && !netObj.IsSpawned)
+        {
+            netObj.Spawn();
+            Debug.Log("Spawned ComboAbilityManager NetworkObject");
+        }
     }
 
     [ClientRpc]

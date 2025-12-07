@@ -1,7 +1,8 @@
+using System.Collections;
+using System.Collections.Generic;
+using TMPro;
 using Unity.Netcode;
 using UnityEngine;
-using TMPro;
-using System.Collections;
 
 public class ResultsManager : NetworkBehaviour
 {
@@ -22,9 +23,8 @@ public class ResultsManager : NetworkBehaviour
     private int localMaxCombo = 0;
     private int currentCombo = 0;
 
-    //Final stats (filled by server)
-    public int p1Hits, p1Perfects, p1Misses, p1MaxCombo;
-    public int p2Hits, p2Perfects, p2Misses, p2MaxCombo;
+    //Final stats
+    private Dictionary<int, (int hits, int perfects, int misses, int maxCombo)> playerStats = new Dictionary<int, (int, int, int, int)>();
 
     public int playersSubmitted = 0;
     public bool hasSubmitted = false;
@@ -39,24 +39,16 @@ public class ResultsManager : NetworkBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
-
-        //Force spawn the net object - this caused issues because it wasn't "spawning"
-        var netObj = GetComponent<NetworkObject>();
-        if (netObj != null && !netObj.IsSpawned)
-        {
-            if (NetworkManager.Singleton.IsServer || NetworkManager.Singleton.IsHost)
-            {
-                netObj.Spawn();
-                Debug.Log("[ResultsManager] Auto spawned the network object");
-            }
-        }
 
         resultsCanvas.SetActive(false);
     }
 
     private void Start()
     {
+        Debug.Log("[ResultsManager] IsSpawned = " + NetworkObject.IsSpawned);
+        Debug.Log("[ResultsManager] IsOwner = " + IsOwner);
+        Debug.Log("[ResultsManager] IsClient = " + IsClient);
+
         StartCoroutine(FindSongManagerRoutine());
     }
 
@@ -80,51 +72,52 @@ public class ResultsManager : NetworkBehaviour
 
         float remaining = songAudioSource.clip.length - songAudioSource.time;
 
-        //ONLY HOST decides when song ends CHANGE TO 0.2f
-        if (IsHost && remaining <= 83f && !hasSubmitted)
+        //ONLY HOST decides song end
+        if (IsHost && remaining <= 0.2f && !hasSubmitted)
         {
             hasSubmitted = true;
             Debug.Log("[ResultsManager] HOST ENDED SONG — COLLECTING STATS AND SHOWING RESULTS");
 
             //Host collects their own stats
             int mySide = GameplayUI.Instance.GetPlayerSide(NetworkManager.Singleton.LocalClientId);
-            if (mySide == 0)
-            {
-                p1Hits = localHits;
-                p1Perfects = localPerfects;
-                p1Misses = localMisses;
-                p1MaxCombo = localMaxCombo;
-            }
-            else
-            {
-                p2Hits = localHits;
-                p2Perfects = localPerfects;
-                p2Misses = localMisses;
-                p2MaxCombo = localMaxCombo;
-            }
+            SubmitStatsLocally(mySide);
 
-            //Host asks client for stats
-            RequestClientStatsClientRpc();
+            //Retrieve clients stats
+            AskClientsForStats();
+        }
+    }
 
-            //Host shows results immediately
-            StartCoroutine(ShowResultsAfterDelay());
+    private void SubmitStatsLocally(int side)
+    {
+        playerStats[side] = (localHits, localPerfects, localMisses, localMaxCombo);
+    }
+
+    private void AskClientsForStats()
+    {
+        foreach (ulong clientId in NetworkManager.Singleton.ConnectedClientsIds)
+        {
+            if (clientId == NetworkManager.Singleton.LocalClientId) continue;
+            RequestClientStatsClientRpc(new ClientRpcParams
+            {
+                Send = new ClientRpcSendParams { TargetClientIds = new ulong[] { clientId } }
+            });
         }
     }
 
     [ClientRpc]
-    private void RequestClientStatsClientRpc()
+    private void RequestClientStatsClientRpc(ClientRpcParams rpcParams = default)
     {
-        //THIS IS NOT BEING CALLED ON CLIENT!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        Debug.Log("HOST ASKED FOR CLIENT RPC");
-        //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        if (IsHost) return; //Host already submitted
-        Debug.Log("HOST ASKED FOR CLIENT RPC - PASSED HOST CHECK");
+        Debug.Log("HOST ASKED FOR CLIENTRPC (client)");
+
+        if (IsHost) return;
 
         if (!hasSubmitted)
         {
-            Debug.Log("DELIVERED CLIENT RPC");
+            Debug.Log("CLIENTRPC RECEIVED AND IS SUBMITTING STATS");
             hasSubmitted = true;
+
             int mySide = GameplayUI.Instance.GetPlayerSide(NetworkManager.Singleton.LocalClientId);
+
             SubmitClientStatsServerRpc(localHits, localPerfects, localMisses, localMaxCombo, mySide);
         }
     }
@@ -132,33 +125,48 @@ public class ResultsManager : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     private void SubmitClientStatsServerRpc(int hits, int perfects, int misses, int maxCombo, int side)
     {
-        if (side == 0)
+        playerStats[side] = (hits, perfects, misses, maxCombo);
+
+        //If stats received from all connected players, broadcast final results
+        if (playerStats.Count == NetworkManager.Singleton.ConnectedClients.Count)
         {
-            p1Hits = hits;
-            p1Perfects = perfects;
-            p1Misses = misses;
-            p1MaxCombo = maxCombo;
+            BroadcastFinalResultsClientRpc(
+                playerStats.ContainsKey(0) ? playerStats[0].hits : 0,
+                playerStats.ContainsKey(0) ? playerStats[0].perfects : 0,
+                playerStats.ContainsKey(0) ? playerStats[0].misses : 0,
+                playerStats.ContainsKey(0) ? playerStats[0].maxCombo : 0,
+                playerStats.ContainsKey(1) ? playerStats[1].hits : 0,
+                playerStats.ContainsKey(1) ? playerStats[1].perfects : 0,
+                playerStats.ContainsKey(1) ? playerStats[1].misses : 0,
+                playerStats.ContainsKey(1) ? playerStats[1].maxCombo : 0
+            );
         }
-        else
-        {
-            p2Hits = hits;
-            p2Perfects = perfects;
-            p2Misses = misses;
-            p2MaxCombo = maxCombo;
-        }
+    }
+
+    [ClientRpc]
+    private void BroadcastFinalResultsClientRpc(int p1Hits, int p1Perfects, int p1Misses, int p1MaxCombo, int p2Hits, int p2Perfects, int p2Misses, int p2MaxCombo)
+    {
+        this.playerStats[0] = (p1Hits, p1Perfects, p1Misses, p1MaxCombo);
+        this.playerStats[1] = (p2Hits, p2Perfects, p2Misses, p2MaxCombo);
+
+        StartCoroutine(ShowResultsAfterDelay());
     }
 
     private IEnumerator ShowResultsAfterDelay()
     {
         yield return new WaitForSeconds(1.5f);
-
         resultsCanvas.SetActive(true);
 
         string leftName = GetPlayerNameForSide(0);
         string rightName = GetPlayerNameForSide(1);
 
-        string left = $"{leftName}\nHits: {p1Hits}\nPerfect: {p1Perfects}\nMisses: {p1Misses}\nMax Combo: {p1MaxCombo}";
-        string right = $"{rightName}\nHits: {p2Hits}\nPerfect: {p2Perfects}\nMisses: {p2Misses}\nMax Combo: {p2MaxCombo}";
+        var left = playerStats.ContainsKey(0)
+            ? $"{leftName}\nHits: {playerStats[0].hits}\nPerfect: {playerStats[0].perfects}\nMisses: {playerStats[0].misses}\nMax Combo: {playerStats[0].maxCombo}"
+            : leftName;
+
+        var right = playerStats.ContainsKey(1)
+            ? $"{rightName}\nHits: {playerStats[1].hits}\nPerfect: {playerStats[1].perfects}\nMisses: {playerStats[1].misses}\nMax Combo: {playerStats[1].maxCombo}"
+            : rightName;
 
         if (leftResultsText) leftResultsText.text = left;
         if (rightResultsText) rightResultsText.text = right;

@@ -69,18 +69,39 @@ public class ComboAbilityManager : NetworkBehaviour
         return 0;
     }
 
+    public void TryUseAbility()
+    {
+        //if (!IsOwner) return;
+
+        int currentCombo = ComboManager.Instance?.combo ?? 0;
+        int milestone = GetCurrentMilestone(currentCombo);
+
+        if (milestone > 0)
+        {
+            Debug.Log($"[ComboAbility] Using ability level {milestone} at combo {currentCombo}");
+            UseAbilityServerRpc();
+        }
+        else
+        {
+            Debug.Log("[ComboAbility] No ability ready");
+        }
+    }
+
     //Called when press Space
     [ServerRpc(RequireOwnership = false)]
     public void UseAbilityServerRpc(ServerRpcParams rpcParams = default)
     {
+        Debug.Log("ComboAbility Called UseAbilityServerRpc");
         ulong clientId = rpcParams.Receive.SenderClientId;
         var stats = NetworkManager.Singleton.ConnectedClients[clientId]
                     .PlayerObject?.GetComponent<PlayerStats>();
+        Debug.Log("ComboAbility Retrieved Stats: " + stats);
         if (stats == null) return;
-
+        Debug.Log("ComboAbility Retrieved Stats Successfully");
         int milestone = GetCurrentMilestone(stats.Combo.Value);
+        Debug.Log("ComboAbility Milestone: " + milestone);
         if (milestone == 0) return;
-
+        Debug.Log("ComboAbility Milestone Success");
         //Reset combo
         stats.Combo.Value = 0;
 
@@ -88,13 +109,16 @@ public class ComboAbilityManager : NetworkBehaviour
         switch (milestone)
         {
             case 1: //Health Regen (self)
+                Debug.Log("ComboAbility Called Health Regen");
                 ApplyHealthRegenClientRpc(clientId);
                 break;
             case 2: //Screen Blur
+                Debug.Log("ComboAbility Called Screen Blur");
                 ulong opponent = GetOpponentId(clientId);
                 ApplyScreenBlurClientRpc(opponent);
                 break;
             case 3: //Hide Hitline
+                Debug.Log("ComboAbility Called Hide Hitline");
                 ulong opponent2 = GetOpponentId(clientId);
                 ApplyHitlineHideClientRpc(opponent2);
                 break;
@@ -112,6 +136,7 @@ public class ComboAbilityManager : NetworkBehaviour
     private void ApplyHealthRegenClientRpc(ulong targetClientId)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
+        Debug.Log("ComboAbility Used Health Regen");
         StartCoroutine(HealthRegenCoroutine());
     }
 
@@ -119,6 +144,7 @@ public class ComboAbilityManager : NetworkBehaviour
     private void ApplyScreenBlurClientRpc(ulong targetClientId)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
+        Debug.Log("ComboAbility Used Screen Blur");
         StartCoroutine(ScreenBlurCoroutine());
     }
 
@@ -126,6 +152,7 @@ public class ComboAbilityManager : NetworkBehaviour
     private void ApplyHitlineHideClientRpc(ulong targetClientId)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
+        Debug.Log("ComboAbility Hid Hitline");
         StartCoroutine(HitlineHideCoroutine());
     }
 

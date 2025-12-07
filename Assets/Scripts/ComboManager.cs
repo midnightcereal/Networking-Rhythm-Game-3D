@@ -21,7 +21,7 @@ public class ComboManager : MonoBehaviour
     public float holdBounceAmplitude = 10f;    //pixels moved up/down for hold
     public float tapBounceAmplitude = 15f;     //pixels moved up/down for tap
 
-    private int combo = 0;
+    [HideInInspector] public int combo = 0;
     private Vector3 originalPos;
     private Coroutine holdCoroutine;
     private bool isHolding = false;

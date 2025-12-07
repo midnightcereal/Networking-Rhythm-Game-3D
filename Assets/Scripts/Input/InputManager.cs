@@ -38,6 +38,12 @@ public class InputManager : MonoBehaviour
                 laneHolding[lane] = false;
                 ReleaseHold(lane);
             }
+
+            //Ability Input
+            if (Input.GetKeyDown(KeyCode.Space))
+            {
+                ComboAbilityManager.Instance?.TryUseAbility();
+            }
         }
     }
 
