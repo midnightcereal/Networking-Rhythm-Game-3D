@@ -55,9 +55,9 @@ public class GameplayUI : NetworkBehaviour
     public Image rightComboBackground;
 
     private readonly Color defaultColor = Color.white;
-    private readonly Color blueColor = new Color(0.0f, 0.0f, 0.7f);     //30+
-    private readonly Color indigoColor = new Color(0.2f, 0.0f, 0.9f);     //50+
-    private readonly Color purpleColor = new Color(0.7f, 0f, 1f);      //70+
+    private readonly Color blueColor = new Color(0.0f, 0.0f, 0.7f);     //16+
+    private readonly Color indigoColor = new Color(0.2f, 0.0f, 0.9f);     //31+
+    private readonly Color purpleColor = new Color(0.7f, 0f, 1f);      //50+
 
     private int lastMilestoneLeft = 0;
     private int lastMilestoneRight = 0;
@@ -326,6 +326,57 @@ public class GameplayUI : NetworkBehaviour
         Destroy(popup);
     }
 
+    ///<summary>Called from ComboManager when health is regained</summary>
+    public void ShowHealthRegenPopup(ulong clientId, float healAmount)
+    {
+        if (damageTextPrefab == null || healAmount <= 0f) return;
+
+        int side = GetPlayerSide(clientId);
+        Transform parent = side == 0 ? leftDamagePopupParent : rightDamagePopupParent;
+        if (parent == null) return;
+
+        GameObject popupObj = Instantiate(damageTextPrefab, parent);
+        TextMeshProUGUI text = popupObj.GetComponent<TextMeshProUGUI>();
+        if (text != null)
+        {
+            text.text = $"+{healAmount:F0}";
+            text.color = Color.green;
+            StartCoroutine(AnimateHealPopup(popupObj));
+        }
+    }
+
+    private IEnumerator AnimateHealPopup(GameObject popup)
+    {
+        RectTransform rt = popup.GetComponent<RectTransform>();
+        Vector3 startPos = Vector3.zero;
+        Vector3 endPos = Vector3.up * 50f;
+
+        float duration = 0.6f;
+        float timer = 0f;
+
+        //Pop out + fade in
+        while (timer < duration * 0.5f)
+        {
+            timer += Time.deltaTime;
+            float t = timer / (duration * 0.5f);
+            rt.anchoredPosition = Vector3.Lerp(startPos, endPos, t);
+            popup.GetComponent<TextMeshProUGUI>().alpha = Mathf.Lerp(0f, 1f, t);
+            yield return null;
+        }
+
+        //Fade out
+        timer = 0f;
+        while (timer < duration * 0.5f)
+        {
+            timer += Time.deltaTime;
+            float t = timer / (duration * 0.5f);
+            popup.GetComponent<TextMeshProUGUI>().alpha = Mathf.Lerp(1f, 0f, t);
+            yield return null;
+        }
+
+        Destroy(popup);
+    }
+
     //==== UI PULSING ====
     ///<summary>Called from ComboAbilityManager on ability activate</summary>
     public void PulseComboOfPlayer(ulong clientId, float duration)
@@ -334,7 +385,6 @@ public class GameplayUI : NetworkBehaviour
 
         Transform target = side == 0 ? leftComboParent : rightComboParent;
 
-        Debug.Log("Triggered UI PULSE");
         TriggerComboPulse(target, duration);
     }
 
@@ -346,7 +396,6 @@ public class GameplayUI : NetworkBehaviour
             return;
         }
 
-        Debug.Log("Started UI PULSE");
         StartCoroutine(PulseRotateRoutine(target, duration));
     }
 

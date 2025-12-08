@@ -40,8 +40,6 @@ public class ComboAbilityManager : NetworkBehaviour
             return;
         }
 
-        Debug.Log($"[ComboAbility] Milestone {milestone} reached! Pressed SPACE.");
-
         //Clear the local ability UI immediately
         if (clientId == NetworkManager.Singleton.LocalClientId)
         {
@@ -159,7 +157,7 @@ public class ComboAbilityManager : NetworkBehaviour
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
 
-        Debug.Log("[ComboAbility] Screen Blur triggered for client " + targetClientId);
+        Debug.Log("Screen Blur triggered for client " + targetClientId);
 
         //Trigger the UI blur effect locally
         GameplayUI.Instance.TriggerScreenBlur(ComboAbilityManager.Instance.screenBlurDuration);
@@ -171,7 +169,7 @@ public class ComboAbilityManager : NetworkBehaviour
         if (NetworkManager.Singleton.LocalClientId != targetClientId)
             return;
 
-        Debug.Log("[ComboAbility] Hitline Hide triggered for client " + targetClientId);
+        Debug.Log("Hitline Hide triggered for client " + targetClientId);
 
         //Hide opponent's local hitline
         HideHitbar.Instance?.HideForDuration(duration);
@@ -179,18 +177,24 @@ public class ComboAbilityManager : NetworkBehaviour
 
     #endregion
 
-    #region Local Coroutines
+    #region Coroutines
 
     private IEnumerator HealthRegenCoroutine(float duration)
     {
         var stats = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerStats>();
-        stats.Health.Value += regenAmount;
+
+        //Show initial regen popup for the total heal amount
+        float totalRegenAmount = regenPerSecond * duration;
+        GameplayUI.Instance?.ShowHealthRegenPopup(stats.OwnerClientId, totalRegenAmount);
 
         float elapsed = 0f;
         while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
+
+            //Increment health gradually over time
             stats.Health.Value = Mathf.Min(100f, stats.Health.Value + regenPerSecond * Time.deltaTime);
+
             yield return null;
         }
     }

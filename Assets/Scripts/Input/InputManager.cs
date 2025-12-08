@@ -27,7 +27,6 @@ public class InputManager : MonoBehaviour
         var localObject = NetworkManager.Singleton.LocalClient?.PlayerObject;
         if (localObject != null)
             localPlayerStats = localObject.GetComponent<PlayerStats>();
-        Debug.Log("RETRIEVED");
     }
 
     private void Update()

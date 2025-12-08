@@ -44,18 +44,14 @@ public class ComboManager : MonoBehaviour
         playerClientId = playerStats.OwnerClientId;
     }
 
-    ///<summary>
-    ///Starts tap animation
-    ///</summary>
+    ///<summary>Starts tap animation</summary>
     public void PlayPopAnimation(Note note)
     {
         if (note == null) return;
         StartCoroutine(TapBounce());
     }
 
-    ///<summary>
-    ///Starts continuous hold pulse animation
-    ///</summary>
+    ///<summary>Starts continuous hold pulse animation</summary>
     public void StartHoldPulse(Note note)
     {
         if (!isHolding)
@@ -65,9 +61,7 @@ public class ComboManager : MonoBehaviour
         }
     }
 
-    ///<summary>
-    ///Stops the hold pulse animation
-    ///</summary>
+    ///<summary>Stops the hold pulse animation</summary>
     public void StopHoldPulse(Note note = null)
     {
         if (holdCoroutine != null)
@@ -80,9 +74,7 @@ public class ComboManager : MonoBehaviour
             comboText.transform.localPosition = originalPos;
     }
 
-    ///<summary>
-    ///Increment combo count and trigger animations
-    ///</summary>
+    ///<summary>Increment combo count and trigger animations</summary>
     public void AddCombo(bool isHold, Note note = null)
     {
         if (playerStats.Health.Value <= 0f)
@@ -113,17 +105,14 @@ public class ComboManager : MonoBehaviour
             StartHoldPulse(note);
     }
 
-    ///<summary>
-    ///Reset combo counter and stop any hold animations
-    ///</summary>
+    ///<summary>Reset combo counter and stop any hold animations</summary>
     public void ResetCombo()
     {
         //Only act if this is the local player's combo
         if (playerStats.OwnerClientId != NetworkManager.Singleton.LocalClientId)
             return;
 
-        //Play Miss SFX only when combo breaks
-        // if (combo > 1 && audioSource && missSound)
+        //Play Miss SFX
         audioSource.PlayOneShot(missSound);
 
         //Network health loss
@@ -133,17 +122,15 @@ public class ComboManager : MonoBehaviour
         }
         else
         {
-            float deduction = (combo > 30) ? 5f : 10f;
+            float deduction = (combo > 30) ? 2f : 5f;
             float oldHealth = playerStats.Health.Value;
             float newHealth = Mathf.Max(0f, oldHealth - deduction);
 
             playerStats.Health.Value = newHealth;
 
-            // GameplayUI.Instance.ResetComboBar(NetworkManager.Singleton.LocalClientId);
             GameplayUI.Instance.ResetComboBarServerRpc(playerClientId);
 
             //Show damage popup
-            //GameplayUI.Instance?.ShowDamagePopup(NetworkManager.Singleton.LocalClientId, deduction);
             if (playerStats != null)
                 playerStats.ShowDamagePopupServerRpc(NetworkManager.Singleton.LocalClientId, deduction);
         }
@@ -151,7 +138,7 @@ public class ComboManager : MonoBehaviour
         if (combo > 1)
         {
             ResultsManager.Instance.OnComboBreak();
-            Debug.Log("[ResultsManager] Registered Combo Break");
+            //Debug.Log("Registered Combo Break");
 
             //GameplayUI.Instance.ResetComboBar(playerClientId);
 
@@ -181,9 +168,7 @@ public class ComboManager : MonoBehaviour
             comboText.text = $"Combo: {combo}";
     }
 
-    ///<summary>
-    ///Short upward then downward movement for tap notes
-    ///</summary>
+    ///<summary>Short upward then downward movement for tap notes</summary>
     private IEnumerator TapBounce()
     {
         if (!comboText) yield break;
@@ -210,9 +195,7 @@ public class ComboManager : MonoBehaviour
         comboText.transform.localPosition = originalPos;
     }
 
-    ///<summary>
-    ///Continuous up and down bouncing for hold notes
-    ///</summary>
+    ///<summary>Continuous up and down bouncing for hold notes</summary>
     private IEnumerator HoldPulse()
     {
         if (!comboText) yield break;

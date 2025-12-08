@@ -83,9 +83,8 @@ public class Note : MonoBehaviour
         if (isHit) return;
         isHit = true;
 
-        //LOGIC TO BE VERIFIED!
         float dist = Mathf.Abs(transform.position.y - hitLine.position.y);
-        bool isPerfect = dist <= 0.05f;
+        bool isPerfect = dist <= 0.1f;
 
         ResultsManager.Instance.RegisterHit(isPerfect);
         Debug.Log("[ResultsManager] Registered Hit, PERFECT?: " + isPerfect);
@@ -105,7 +104,7 @@ public class Note : MonoBehaviour
             //Combo for tap
             ComboManager.Instance.AddCombo(false, this);
 
-            // Pop note animation
+            //Pop note animation
             StartCoroutine(PopAndDestroy());
         }
     }

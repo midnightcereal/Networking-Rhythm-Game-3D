@@ -58,6 +58,11 @@ public class SongManager : MonoBehaviour
     {
         SongSelectionManager.Instance?.ApplySelectedSongToGame();
         LoadSong();
+
+        //Apply saved volume
+        float savedVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
+        if (audioSource != null)
+            audioSource.volume = savedVolume;
     }
 
     public void BeginSong(float additionalDelay)
@@ -138,28 +143,4 @@ public class SongManager : MonoBehaviour
         if (audioSource != null && audioSource.clip != null)
             audioSource.Play();
     }
-
-    //private void Update()
-    //{
-    //    if (songEnded || audioSource == null || audioSource.clip == null || !audioSource.isPlaying) return;
-
-    //    //Song is considered ended when within 0.2s of end
-    //    if (audioSource.time >= audioSource.clip.length)
-    //    {
-    //        songEnded = true;
-    //        OnSongEnd();
-    //    }
-    //}
-
-    ////Called automatically when song ends
-    //private void OnSongEnd()
-    //{
-    //    Debug.Log("SONG ENDED — Showing Results");
-
-    //    if (ResultsManager.Instance != null)
-    //    {
-    //        Debug.Log("SONG ENDED -> Submitting results");
-    //        //ResultsManager.Instance.SubmitLocalResults();
-    //    }
-    //}
 }

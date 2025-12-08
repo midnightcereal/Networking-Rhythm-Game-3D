@@ -9,6 +9,7 @@ public class LobbyUI : MonoBehaviour
     public static LobbyUI Instance;
 
     public Toggle epilepsyToggle;
+    public Slider volumeSlider;
 
     public Button hostButton;
     public Button joinButton;
@@ -35,14 +36,28 @@ public class LobbyUI : MonoBehaviour
         //Load saved epilepsy mode
         bool savedValue = PlayerPrefs.GetInt("EpilepsySafeMode", 0) == 1;
         epilepsyToggle.isOn = savedValue;
-
         epilepsyToggle.onValueChanged.AddListener(OnEpilepsyToggleChanged);
+
+        //Load saved volume
+        float savedVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
+        volumeSlider.value = savedVolume;
+        AudioListener.volume = savedVolume;
+        volumeSlider.onValueChanged.AddListener(OnVolumeChanged);
     }
 
     private void OnEpilepsyToggleChanged(bool value)
     {
         PlayerPrefs.SetInt("EpilepsySafeMode", value ? 1 : 0);
         PlayerPrefs.Save();
+    }
+
+    private void OnVolumeChanged(float value)
+    {
+        PlayerPrefs.SetFloat("MasterVolume", value);
+        PlayerPrefs.Save();
+
+        //Apply volume to listener and now playing audio
+        AudioListener.volume = value;
     }
 
     private void StartHost()

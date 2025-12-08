@@ -30,7 +30,7 @@ public class GameSceneManager : NetworkBehaviour
     {
         if (sceneName != "Game") return;
 
-        Debug.Log($"Client {clientId} loaded Game scene");
+        //Debug.Log($"Client {clientId} loaded Game scene");
 
         //Spawn local rhythm setup for local player
         if (clientId == NetworkManager.Singleton.LocalClientId)
@@ -63,7 +63,7 @@ public class GameSceneManager : NetworkBehaviour
             Destroy(localRhythmInstance);
 
         localRhythmInstance = Instantiate(localRhythmPrefab);
-        Debug.Log("Spawned local rhythm setup for local client");
+        //Debug.Log("Spawned local rhythm setup for local client");
     }
 
     [ClientRpc]
