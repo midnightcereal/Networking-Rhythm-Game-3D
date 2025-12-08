@@ -126,6 +126,7 @@ public class SongMenuGrid : MonoBehaviour
         if (NetworkManager.Singleton.IsHost && SongSelectionManager.Instance != null)
         {
             SongSelectionManager.Instance?.SetSelectedSong(song.songName);
+            NowPlayingManager.Instance?.OnLobbySongSelected();
         }
     }
 
