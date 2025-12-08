@@ -1,0 +1,49 @@
+{
+    "songName": "Autumn Snow",
+    "bpm": 169.0,
+    "speedMultiplier": 0.05000000074505806,
+    "audioFile": "autumn_snow",
+    "colourChangeBeats": 1,
+    "availableColours": [
+        "#ff4b81",
+        "#00c3ff"
+    ],
+    "notes": [
+        {
+            "positionY": 34.55590057373047,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 42.7032356262207,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 48.906368255615237,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 63.07353210449219,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 70.75794982910156,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 78.07196044921875,
+            "lane": 2,
+            "type": "tap",
+            "holdDuration": 0.0
+        }
+    ]
+}

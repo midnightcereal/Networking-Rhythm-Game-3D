@@ -24,7 +24,7 @@ public class BeatMarkerVisualizer : MonoBehaviour
             return;
 
         //Press Space to (re)load and visualize
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (Input.GetKeyDown(KeyCode.P))
         {
             LoadAndDisplayBeats();
         }

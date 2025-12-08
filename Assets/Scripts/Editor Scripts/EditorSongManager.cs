@@ -618,8 +618,6 @@ public class EditorSongManager : MonoBehaviour
         if (audioSource == null || audioSource.clip == null) return;
         if (!isPlayingFromCamera || !audioSource.isPlaying) return;
 
-        Debug.Log("CALLED");
-
         float songTime = audioSource.time;              // seconds into the song
         float scrollOffset = songTime / speedMultiplier; // convert to world Y units
 

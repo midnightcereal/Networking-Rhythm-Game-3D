@@ -3398,15 +3398,21 @@ MonoBehaviour:
   previewAudioSource: {fileID: 466883516}
   songs:
   - songName: Kitsune
-    artist: Me
+    artist: Charlie
     difficulty: 4
     previewClip: {fileID: 8300000, guid: 830bcc977a21a614e89696c992a9b09f, type: 3}
     sceneToLoad: 
     coverArt: {fileID: 0}
-  - songName: no_title_yet
-    artist: Me
+  - songName: Shimmer
+    artist: Charlie
     difficulty: 3
     previewClip: {fileID: 8300000, guid: 3b1d1182e5e739b49a84db71edf9a48f, type: 3}
+    sceneToLoad: 
+    coverArt: {fileID: 0}
+  - songName: Autumn Snow
+    artist: Charlie
+    difficulty: 0
+    previewClip: {fileID: 8300000, guid: e1a1f7c6daa939741bdfd2dbe4210ac2, type: 3}
     sceneToLoad: 
     coverArt: {fileID: 0}
 --- !u!114 &2009161763
