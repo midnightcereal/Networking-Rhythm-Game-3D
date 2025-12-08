@@ -3,6 +3,8 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
+    private PlayerStats localPlayerStats;
+
     [Header("Controls")]
     public KeyCode[] laneKeys = { KeyCode.D, KeyCode.F, KeyCode.J, KeyCode.K };
 
@@ -18,6 +20,14 @@ public class InputManager : MonoBehaviour
     private void Awake()
     {
         laneHolding = new bool[laneKeys.Length];
+    }
+
+    private void Start()
+    {
+        var localObject = NetworkManager.Singleton.LocalClient?.PlayerObject;
+        if (localObject != null)
+            localPlayerStats = localObject.GetComponent<PlayerStats>();
+        Debug.Log("RETRIEVED");
     }
 
     private void Update()
@@ -42,6 +52,9 @@ public class InputManager : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
+                if (localPlayerStats.Health.Value <= 0f)
+                    return;
+
                 int visualCombo = GameplayUI.Instance.GetComboBarValue(NetworkManager.Singleton.LocalClientId);
                 ComboAbilityManager.Instance?.TryUseAbility(visualCombo, NetworkManager.Singleton.LocalClientId);
             }

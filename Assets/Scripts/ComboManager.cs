@@ -119,12 +119,12 @@ public class ComboManager : MonoBehaviour
     public void ResetCombo()
     {
         //Play Miss SFX only when combo breaks
-        if (combo > 1 && audioSource && missSound)
+       // if (combo > 1 && audioSource && missSound)
             audioSource.PlayOneShot(missSound);
 
         //Network health loss
-        if (combo > 0 && playerStats != null)
-        {
+        //if (combo > 0 && playerStats != null)
+        //{
             if (!playerStats.IsOwner)
             {
                 Debug.LogWarning("Not owner of PlayerStats - cannot modify health directly");
@@ -145,11 +145,11 @@ public class ComboManager : MonoBehaviour
                 if (playerStats != null)
                     playerStats.ShowDamagePopupServerRpc(NetworkManager.Singleton.LocalClientId, deduction);
             }
-        }
-        else
-        {
+       // }
+        //else
+        //{
             //Debug.Log("[ComboManager] No health deduction - combo = 0 or playerStats missing");
-        }
+       // }
 
         if (combo > 1)
         {
