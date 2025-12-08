@@ -1,7 +1,6 @@
 {
     "songName": "Kitsune",
-    "artist": "Me",
-    "difficulty": 4,
+    "difficulty": "4",
     "bpm": 178.0,
     "speedMultiplier": 0.10000000149011612,
     "audioFile": "Kitsune",
@@ -17,36 +16,6 @@
         "6C80FF"
     ],
     "notes": [
-        {
-            "positionY": 12.369999885559082,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 12.369999885559082,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 12.369999885559082,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 12.369999885559082,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
-        {
-            "positionY": 12.369999885559082,
-            "lane": 3,
-            "type": "tap",
-            "holdDuration": 0.0
-        },
         {
             "positionY": 220.0104522705078,
             "lane": 0,
@@ -1651,6 +1620,12 @@
         },
         {
             "positionY": 468.3806457519531,
+            "lane": 3,
+            "type": "tap",
+            "holdDuration": 0.0
+        },
+        {
+            "positionY": 12.342696189880371,
             "lane": 3,
             "type": "tap",
             "holdDuration": 0.0

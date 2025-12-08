@@ -170,6 +170,14 @@ public class ResultsManager : NetworkBehaviour
 
         if (leftResultsText) leftResultsText.text = left;
         if (rightResultsText) rightResultsText.text = right;
+
+        //Force background to black when results appear
+        Camera cam = Camera.main;
+        if (cam != null)
+        {
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+        }
     }
 
     private string GetPlayerNameForSide(int side)

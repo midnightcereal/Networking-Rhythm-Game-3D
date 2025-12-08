@@ -70,7 +70,7 @@ public class GameSceneManager : NetworkBehaviour
     private void StartGameClientRpc()
     {
         Debug.Log("Game started for everyone!");
-        double startTime = NetworkManager.ServerTime.Time + 2.0;
+        double startTime = NetworkManager.ServerTime.Time + 1.0;
         StartCoroutine(CountdownStart(startTime));
     }
 
@@ -97,6 +97,14 @@ public class GameSceneManager : NetworkBehaviour
             yield return introUI.PlayIntroSequence(songData.songName, songData.artist, songData.difficulty);
         }
 
-        songManager.BeginSong();
+        //Since adding song selector client is 0.2 seconds out of sync for some reason
+        if (NetworkManager.Singleton.IsHost)
+        {
+            songManager.BeginSong(0.2f);
+        }
+        else
+        {
+            songManager.BeginSong(0f);
+        }
     }
 }

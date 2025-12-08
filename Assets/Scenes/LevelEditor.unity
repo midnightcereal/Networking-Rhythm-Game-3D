@@ -588,9 +588,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e18fbd2e09010304183d90dc8b0eaee0, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  play: 1
+  play: 0
   hitLine: {fileID: 7732289100553974425}
-  hitTolerance: 0.4
+  hitTolerance: 0.05
   speedMultiplier: 0.1
 --- !u!4 &514986365
 Transform:
@@ -958,7 +958,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speedMultiplier: 1
-  laneX: 0
+  laneX: 5
   markerPrefab: {fileID: 2413030033346888932, guid: 29f8bb337cf1e6d41b3d2390d94977ab,
     type: 3}
 --- !u!4 &945554647
@@ -1057,11 +1057,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2ce999bc543e09d468210b28324956fa, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  missSound: {fileID: 0}
+  audioSource: {fileID: 0}
   comboText: {fileID: 1485654553}
   tapBounceDuration: 0.15
   holdBounceDuration: 0.1
   holdBounceAmplitude: 10
   tapBounceAmplitude: -15
+  combo: 0
 --- !u!4 &1077227738
 Transform:
   m_ObjectHideFlags: 0
@@ -1184,38 +1187,33 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   dragToolActive: 0
-  selectionBox: {fileID: 283141224}
+  selectionBox: {fileID: 0}
   notePrefab: {fileID: 4524379961284188243, guid: 9b1e1d24f6d204d478c8f062038af553,
     type: 3}
   speedMultiplier: 0.1
   laneZ: 9.5
-  trackStartY: 12.37
-  bpm: 178
-  beatSubdivision: 1
-  segmentHeight: 2.6966293
-  gridVisualScale: 20
+  trackStartY: 2.5
+  bpm: 120
+  beatSubdivision: 4
+  segmentHeight: 1
+  gridVisualScale: 4
   segmentPrefab: {fileID: 493502882509147007, guid: e08df1a379a1b3649885c0ac8b112807,
     type: 3}
   runtimeSegments: []
-  trackContainer: {fileID: 0}
-  scrollSpeed: 65
+  trackContainer: {fileID: 334160904}
+  scrollSpeed: 5
   cameraReturnSpeed: 5
   isPlayingFromCamera: 0
   laneXPositions:
   - -9.2
-  - -2.85
-  - 2.85
-  - 9.2
-  segmentCount: 100
+  - -2.88
+  - 2.88
+  - 9.22
+  segmentCount: 20
   segmentColour: {r: 0, g: 1, b: 0, a: 1}
   holdDurationEditor: 1
   snippetDuration: 0.15
-  notes:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  notes: []
   placingTap: 0
   placingHold: 0
   deleteMode: 0
@@ -1253,6 +1251,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: dde3d5d1c6e3617458235dd0b0fb7cbd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  localRhythmPrefab: {fileID: 0}
 --- !u!114 &1235528355
 MonoBehaviour:
   m_ObjectHideFlags: 0

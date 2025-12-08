@@ -60,10 +60,10 @@ public class SongManager : MonoBehaviour
         LoadSong();
     }
 
-    public void BeginSong()
+    public void BeginSong(float additionalDelay)
     {
         SpawnAllNotes();
-        StartCoroutine(StartAudioWithDelay());
+        StartCoroutine(StartAudioWithDelay(additionalDelay));
 
         if (cameraColourManager != null && songData.availableColours != null)
             cameraColourManager.Initialize(songData.availableColours, songData.bpm, songData.colourChangeBeats, audioSource);
@@ -126,36 +126,36 @@ public class SongManager : MonoBehaviour
         }
     }
 
-    private IEnumerator StartAudioWithDelay()
+    private IEnumerator StartAudioWithDelay(float additionalDelay)
     {
-        yield return new WaitForSeconds(Mathf.Abs(preRollSeconds));
+        float totalDelay = Mathf.Abs(preRollSeconds) + additionalDelay;
+        yield return new WaitForSeconds(totalDelay);
 
-        //Causes brief freeze at start - ok because no notes at start of songs
         if (audioSource != null && audioSource.clip != null)
             audioSource.Play();
     }
 
-    private void Update()
-    {
-        //if (songEnded || audioSource == null || audioSource.clip == null || !audioSource.isPlaying) return;
+    //private void Update()
+    //{
+    //    if (songEnded || audioSource == null || audioSource.clip == null || !audioSource.isPlaying) return;
 
-        ////Song is considered ended when within 0.2s of end
-        //if (audioSource.time >= audioSource.clip.length)
-        //{
-        //    songEnded = true;
-        //    OnSongEnd();
-        //}
-    }
+    //    //Song is considered ended when within 0.2s of end
+    //    if (audioSource.time >= audioSource.clip.length)
+    //    {
+    //        songEnded = true;
+    //        OnSongEnd();
+    //    }
+    //}
 
-    //Called automatically when song ends
-    private void OnSongEnd()
-    {
-        Debug.Log("SONG ENDED — Showing Results");
+    ////Called automatically when song ends
+    //private void OnSongEnd()
+    //{
+    //    Debug.Log("SONG ENDED — Showing Results");
 
-        if (ResultsManager.Instance != null)
-        {
-            Debug.Log("SONG ENDED -> Submitting results");
-            //ResultsManager.Instance.SubmitLocalResults();
-        }
-    }
+    //    if (ResultsManager.Instance != null)
+    //    {
+    //        Debug.Log("SONG ENDED -> Submitting results");
+    //        //ResultsManager.Instance.SubmitLocalResults();
+    //    }
+    //}
 }
