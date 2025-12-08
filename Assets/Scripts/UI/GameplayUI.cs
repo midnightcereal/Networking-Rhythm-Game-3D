@@ -131,7 +131,8 @@ public class GameplayUI : NetworkBehaviour
     public void SetLocalAbilityReadyText(int comboBarValue)
     {
         //Do not show ability text if the local player has no health
-        if (GetLocalPlayerHealth() <= 0f)
+        var localStats = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerStats>();
+        if (localStats.Health.Value <= 0f)
         {
             ClearAbilityText();
             return;
@@ -262,19 +263,6 @@ public class GameplayUI : NetworkBehaviour
             playerSide[clientId] = index;
         }
         return playerSide[clientId];
-    }
-
-    private float GetLocalPlayerHealth()
-    {
-        var clientId = NetworkManager.Singleton.LocalClientId;
-
-        if (!NetworkManager.Singleton.ConnectedClients.TryGetValue(clientId, out var client))
-            return 0f;
-
-        var stats = client.PlayerObject.GetComponent<PlayerStats>();
-        if (stats == null) return 0f;
-
-        return stats.Health.Value;
     }
 
     public void OnPlayerFailed(ulong clientId)

@@ -85,10 +85,10 @@ public class ComboManager : MonoBehaviour
     ///</summary>
     public void AddCombo(bool isHold, Note note = null)
     {
-        combo++;
+        if (playerStats.Health.Value <= 0f)
+            return;
 
-        //Update visual combo bar for local player
-        //GameplayUI.Instance.IncrementComboBar(playerClientId);
+        combo++;
 
         //Play Hit SFX - TOO DISTRACTING
         //if (audioSource && hitSound)
@@ -118,38 +118,35 @@ public class ComboManager : MonoBehaviour
     ///</summary>
     public void ResetCombo()
     {
+        //Only act if this is the local player's combo
+        if (playerStats.OwnerClientId != NetworkManager.Singleton.LocalClientId)
+            return;
+
         //Play Miss SFX only when combo breaks
-       // if (combo > 1 && audioSource && missSound)
-            audioSource.PlayOneShot(missSound);
+        // if (combo > 1 && audioSource && missSound)
+        audioSource.PlayOneShot(missSound);
 
         //Network health loss
-        //if (combo > 0 && playerStats != null)
-        //{
-            if (!playerStats.IsOwner)
-            {
-                Debug.LogWarning("Not owner of PlayerStats - cannot modify health directly");
-            }
-            else
-            {
-                float deduction = (combo > 30) ? 5f : 10f;
-                float oldHealth = playerStats.Health.Value;
-                float newHealth = Mathf.Max(0f, oldHealth - deduction);
+        if (!playerStats.IsOwner)
+        {
+            Debug.LogWarning("Not owner of PlayerStats - cannot modify health directly");
+        }
+        else
+        {
+            float deduction = (combo > 30) ? 5f : 10f;
+            float oldHealth = playerStats.Health.Value;
+            float newHealth = Mathf.Max(0f, oldHealth - deduction);
 
-                playerStats.Health.Value = newHealth;
+            playerStats.Health.Value = newHealth;
 
-               // GameplayUI.Instance.ResetComboBar(NetworkManager.Singleton.LocalClientId);
-                GameplayUI.Instance.ResetComboBarServerRpc(playerClientId);
+            // GameplayUI.Instance.ResetComboBar(NetworkManager.Singleton.LocalClientId);
+            GameplayUI.Instance.ResetComboBarServerRpc(playerClientId);
 
-                //Show damage popup
-                //GameplayUI.Instance?.ShowDamagePopup(NetworkManager.Singleton.LocalClientId, deduction);
-                if (playerStats != null)
-                    playerStats.ShowDamagePopupServerRpc(NetworkManager.Singleton.LocalClientId, deduction);
-            }
-       // }
-        //else
-        //{
-            //Debug.Log("[ComboManager] No health deduction - combo = 0 or playerStats missing");
-       // }
+            //Show damage popup
+            //GameplayUI.Instance?.ShowDamagePopup(NetworkManager.Singleton.LocalClientId, deduction);
+            if (playerStats != null)
+                playerStats.ShowDamagePopupServerRpc(NetworkManager.Singleton.LocalClientId, deduction);
+        }
 
         if (combo > 1)
         {

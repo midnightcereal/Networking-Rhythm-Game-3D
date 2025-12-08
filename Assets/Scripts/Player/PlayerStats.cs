@@ -91,6 +91,11 @@ public class PlayerStats : NetworkBehaviour
     public void ShowDamagePopupClientRpc(ulong clientId, float damageAmount)
     {
         GameplayUI.Instance?.ShowDamagePopup(clientId, damageAmount);
-        MissEffect.Instance?.TriggerMissFlash();
+
+        //Only trigger miss flash for the player who owns this client
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+        {
+            MissEffect.Instance?.TriggerMissFlash();
+        }
     }
 }
