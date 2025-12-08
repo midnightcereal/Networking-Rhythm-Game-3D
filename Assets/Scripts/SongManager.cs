@@ -67,8 +67,6 @@ public class SongManager : MonoBehaviour
 
         if (cameraColourManager != null && songData.availableColours != null)
         {
-            //cameraColourManager.Initialize(songData.availableColours, songData.bpm, songData.colourChangeBeats, audioSource);
-
             cameraColourManager.epilepsySafeMode = PlayerPrefs.GetInt("EpilepsySafeMode", 0) == 1;
 
             cameraColourManager.Initialize(songData.availableColours,songData.bpm,songData.colourChangeBeats,audioSource);

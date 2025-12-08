@@ -7,9 +7,9 @@ public class ComboAbilityManager : NetworkBehaviour
     public static ComboAbilityManager Instance { get; private set; }
 
     [Header("Ability Unlock Thresholds")]
-    public int unlockPoint1 = 3;
-    public int unlockPoint2 = 5;
-    public int unlockPoint3 = 7;
+    public int unlockPoint1 = 16;
+    public int unlockPoint2 = 31;
+    public int unlockPoint3 = 50;
 
     [Header("Ability Settings")]
     public float regenAmount = 30f;

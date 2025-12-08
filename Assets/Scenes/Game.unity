@@ -689,9 +689,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 062ed9f326a05fe4683bf1306bd53401, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  unlockPoint1: 3
-  unlockPoint2: 5
-  unlockPoint3: 7
+  unlockPoint1: 16
+  unlockPoint2: 31
+  unlockPoint3: 50
   regenAmount: 50
   regenPerSecond: 10
   regenDuration: 5

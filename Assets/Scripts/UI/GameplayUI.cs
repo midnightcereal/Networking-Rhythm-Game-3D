@@ -179,9 +179,9 @@ public class GameplayUI : NetworkBehaviour
             {
                 Color targetFill = milestone switch
                 {
-                    7 => purpleColor,
-                    5 => indigoColor,
-                    3 => blueColor,
+                    50 => purpleColor,
+                    31 => indigoColor,
+                    16 => blueColor,
                     _ => defaultColor
                 };
 
