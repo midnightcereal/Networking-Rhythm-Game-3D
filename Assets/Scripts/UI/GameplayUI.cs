@@ -197,13 +197,28 @@ public class GameplayUI : NetworkBehaviour
         }
     }
 
-    public void ResetComboBar(ulong clientId)
+    [ServerRpc(RequireOwnership = false)]
+    public void ResetComboBarServerRpc(ulong clientId)
     {
-        var playerStats = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.GetComponent<PlayerStats>();
+        if (!IsServer) return;
+
+        var playerStats = NetworkManager.Singleton.ConnectedClients[clientId]
+            .PlayerObject.GetComponent<PlayerStats>();
+
         if (playerStats != null)
             playerStats.SetVisualComboServerRpc(0);
 
+        ResetComboBarClientRpc(clientId);
+    }
+
+    [ClientRpc]
+    private void ResetComboBarClientRpc(ulong clientId)
+    {
+        //Run only on the correct client
+        if (NetworkManager.Singleton.LocalClientId != clientId) return;
+
         PulseComboOfPlayer(clientId, 0.2f);
+        Debug.Log("CLIENT RESET COMBO BAR");
     }
 
     public void IncrementComboBar(ulong clientId)

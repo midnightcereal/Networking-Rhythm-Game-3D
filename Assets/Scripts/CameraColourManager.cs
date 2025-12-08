@@ -4,6 +4,8 @@ using System.Collections;
 
 public class CameraColourManager : MonoBehaviour
 {
+    public bool epilepsySafeMode = false;
+
     private Camera cam;
     private List<Color> availableColours = new List<Color>();
     private List<Color> recentColours = new List<Color>();
@@ -25,6 +27,8 @@ public class CameraColourManager : MonoBehaviour
 
     public void Initialize(string[] hexColours, float bpm, int colourChangeBeats, AudioSource audioSource)
     {
+        epilepsySafeMode = PlayerPrefs.GetInt("EpilepsySafeMode", 0) == 1;
+
         availableColours.Clear();
         recentColours.Clear();
         this.bpm = bpm;
@@ -46,12 +50,13 @@ public class CameraColourManager : MonoBehaviour
 
         beatInterval = 60f / bpm;
         nextColourTime = 0f;
-
-        Debug.Log("Camera colour manager initialized");
     }
 
     private void Update()
     {
+        if (epilepsySafeMode)
+            return;
+
         //Wait until the AudioSource is assigned and there are colours
         if (songAudio == null || availableColours.Count == 0)
             return;

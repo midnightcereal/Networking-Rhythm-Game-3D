@@ -80,7 +80,7 @@ public class ComboAbilityManager : NetworkBehaviour
         //Reset combo
         //stats.Combo.Value = 0;
         stats.VisualCombo.Value = 0;
-        GameplayUI.Instance.ResetComboBar(clientId);
+        GameplayUI.Instance.ResetComboBarServerRpc(clientId);
 
         float uiAnimationDuration = 0f;
 

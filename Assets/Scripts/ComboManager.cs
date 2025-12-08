@@ -127,7 +127,7 @@ public class ComboManager : MonoBehaviour
         {
             if (!playerStats.IsOwner)
             {
-                Debug.LogWarning("[ComboManager] Not owner of PlayerStats - cannot modify health directly");
+                Debug.LogWarning("Not owner of PlayerStats - cannot modify health directly");
             }
             else
             {
@@ -136,6 +136,9 @@ public class ComboManager : MonoBehaviour
                 float newHealth = Mathf.Max(0f, oldHealth - deduction);
 
                 playerStats.Health.Value = newHealth;
+
+               // GameplayUI.Instance.ResetComboBar(NetworkManager.Singleton.LocalClientId);
+                GameplayUI.Instance.ResetComboBarServerRpc(playerClientId);
 
                 //Show damage popup
                 //GameplayUI.Instance?.ShowDamagePopup(NetworkManager.Singleton.LocalClientId, deduction);
@@ -153,14 +156,14 @@ public class ComboManager : MonoBehaviour
             ResultsManager.Instance.OnComboBreak();
             Debug.Log("[ResultsManager] Registered Combo Break");
 
+            //GameplayUI.Instance.ResetComboBar(playerClientId);
+
             //Flash Screen
             if (cachedMissEffect != null)
                 cachedMissEffect.TriggerMissFlash();
         }
 
         combo = 0;
-
-        GameplayUI.Instance.ResetComboBar(playerClientId);
 
         //Network the combo reset
         if (playerStats != null)

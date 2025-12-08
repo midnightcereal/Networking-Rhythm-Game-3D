@@ -8,6 +8,8 @@ public class LobbyUI : MonoBehaviour
 {
     public static LobbyUI Instance;
 
+    public Toggle epilepsyToggle;
+
     public Button hostButton;
     public Button joinButton;
     public Button leaveButton;
@@ -29,6 +31,18 @@ public class LobbyUI : MonoBehaviour
         joinButton.gameObject.SetActive(true);
         leaveButton.gameObject.SetActive(false);
         startGameButton.interactable = false; //only host
+
+        //Load saved epilepsy mode
+        bool savedValue = PlayerPrefs.GetInt("EpilepsySafeMode", 0) == 1;
+        epilepsyToggle.isOn = savedValue;
+
+        epilepsyToggle.onValueChanged.AddListener(OnEpilepsyToggleChanged);
+    }
+
+    private void OnEpilepsyToggleChanged(bool value)
+    {
+        PlayerPrefs.SetInt("EpilepsySafeMode", value ? 1 : 0);
+        PlayerPrefs.Save();
     }
 
     private void StartHost()

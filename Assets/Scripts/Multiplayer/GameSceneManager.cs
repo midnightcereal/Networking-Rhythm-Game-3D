@@ -97,7 +97,7 @@ public class GameSceneManager : NetworkBehaviour
             yield return introUI.PlayIntroSequence(songData.songName, songData.artist, songData.difficulty);
         }
 
-        //Since adding song selector client is 0.2 seconds out of sync for some reason
+        //Since adding song selector client's audio is 0.2 seconds out of sync for some reason
         if (NetworkManager.Singleton.IsHost)
         {
             songManager.BeginSong(0.2f);
