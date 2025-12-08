@@ -28,6 +28,8 @@ public class ComboManager : MonoBehaviour
 
     private MissEffect cachedMissEffect;
 
+    private ulong playerClientId;
+
     private void Awake()
     {
         Instance = this;
@@ -38,6 +40,8 @@ public class ComboManager : MonoBehaviour
             originalPos = comboText.transform.localPosition;
 
         playerStats = NetworkManager.Singleton.LocalClient?.PlayerObject?.GetComponent<PlayerStats>();
+
+        playerClientId = playerStats.OwnerClientId;
     }
 
     ///<summary>
@@ -82,6 +86,9 @@ public class ComboManager : MonoBehaviour
     public void AddCombo(bool isHold, Note note = null)
     {
         combo++;
+
+        //Update visual combo bar for local player
+        GameplayUI.Instance.IncrementComboBar(playerClientId);
 
         //Play Hit SFX - TOO DISTRACTING
         //if (audioSource && hitSound)
@@ -148,6 +155,8 @@ public class ComboManager : MonoBehaviour
         }
 
         combo = 0;
+
+        GameplayUI.Instance.ResetComboBar(playerClientId);
 
         //Network the combo reset
         if (playerStats != null)

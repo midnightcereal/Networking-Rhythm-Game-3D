@@ -8,7 +8,7 @@ public class EditorNote : MonoBehaviour
     public int lane = 0;
     public bool isHold = false;
     public float holdDuration = 0f;   // in seconds
-    public float time = 0f;           // when note should appear
+    public float time = 0f;           // song time when note should appear
 
     [HideInInspector] public bool isDragging = false;
     [HideInInspector] public bool isHit = false;
@@ -36,7 +36,7 @@ public class EditorNote : MonoBehaviour
         if (!isHit && !EditorAutoPlayer.IsPlayingNote(this) && EditorSongManager.Instance.isPlayingFromCamera)
         {
             float songTime = EditorSongManager.Instance.audioSource.time;
-            float y = (time - songTime) / EditorSongManager.Instance.speedMultiplier;
+            float y = EditorSongManager.Instance.trackStartY + (time - songTime) / EditorSongManager.Instance.speedMultiplier;
             transform.position = new Vector3(transform.position.x, y, transform.position.z);
         }
     }
@@ -51,8 +51,6 @@ public class EditorNote : MonoBehaviour
             Destroy(line.GetComponent<BoxCollider>());
             holdLine = line.transform;
             holdLine.SetParent(transform, false);
-
-            // Move pivot to bottom
             line.transform.localPosition = Vector3.zero;
 
             if (holdLineMaterial != null)
@@ -62,8 +60,8 @@ public class EditorNote : MonoBehaviour
             }
         }
 
-        holdLine.localScale = new Vector3(0.15f, remainingLength, 0.1f);
-        holdLine.localPosition = new Vector3(0f, remainingLength / 2f, -0.1f);
+        holdLine.localScale = new Vector3(0.15f, remainingLength / EditorSongManager.Instance.speedMultiplier, 0.1f);
+        holdLine.localPosition = new Vector3(0f, remainingLength / (2f * EditorSongManager.Instance.speedMultiplier), -0.1f);
     }
 
     public void PlayTapPop(float amplitude = 0.15f, float duration = 0.2f)
@@ -96,7 +94,7 @@ public class EditorNote : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    public void StartHoldPulse(float amplitude = 0.1f, float cycleDuration = 0.4f)
+    public void StartHoldPulse()
     {
         if (!isBeingHeld)
             holdPulseRoutine = StartCoroutine(HoldPulseCoroutine());
@@ -140,10 +138,11 @@ public class EditorNote : MonoBehaviour
         StopHoldPulse();
         isBeingHeld = false;
 
-        transform.position = new Vector3(transform.position.x, originalY, transform.position.z);
+        float y = EditorSongManager.Instance.trackStartY + (time - 0f) / EditorSongManager.Instance.speedMultiplier;
+        transform.position = new Vector3(transform.position.x, y, transform.position.z);
 
         if (isHold)
-            UpdateHoldVisual(holdDuration / EditorSongManager.Instance.speedMultiplier);
+            UpdateHoldVisual(holdDuration);
 
         gameObject.SetActive(true);
     }

@@ -1203,7 +1203,7 @@ MonoBehaviour:
   selectionBox: {fileID: 0}
   notePrefab: {fileID: 4524379961284188243, guid: 9b1e1d24f6d204d478c8f062038af553,
     type: 3}
-  speedMultiplier: 0.05
+  speedMultiplier: 0.1
   laneZ: 9.5
   trackStartY: 2.5
   bpm: 120

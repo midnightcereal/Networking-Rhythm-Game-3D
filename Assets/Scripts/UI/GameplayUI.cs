@@ -15,6 +15,8 @@ public class GameplayUI : NetworkBehaviour
     public TMPro.TextMeshProUGUI rightPlayerNameText;
     public readonly Dictionary<ulong, string> basePlayerNames = new();
 
+    private readonly Dictionary<ulong, int> comboBarValues = new();
+
     [Header("Ability Feedback")]
     public TextMeshProUGUI abilityText;
 
@@ -119,14 +121,20 @@ public class GameplayUI : NetworkBehaviour
         }
     }
 
-    public void SetLocalAbilityReadyText(int combo)
+    public int GetComboBarValue(ulong clientId)
     {
-        Debug.Log("MILESTONE SetLocalAbilityReadyText Called");
-        int milestone = ComboAbilityManager.Instance.GetCurrentMilestone(combo);
+        if (!comboBarValues.ContainsKey(clientId))
+            comboBarValues[clientId] = 0;
+        return comboBarValues[clientId];
+    }
+
+    public void SetLocalAbilityReadyText(int comboBarValue)
+    {
+        int milestone = ComboAbilityManager.Instance.GetCurrentMilestone(comboBarValue);
+
         if (milestone <= 0)
         {
             ClearAbilityText();
-            Debug.Log("MILESTONE Cleared Text");
             return;
         }
 
@@ -138,7 +146,6 @@ public class GameplayUI : NetworkBehaviour
             _ => ""
         };
 
-        Debug.Log("MILESTONE SetAbilityReadyText Called");
         abilityText.text = $"PRESS SPACE TO USE\n{abilityName}";
     }
 
@@ -148,7 +155,7 @@ public class GameplayUI : NetworkBehaviour
     }
 
     ///<summary>Called from PlayerStats when values change</summary>
-    public void UpdatePlayer(ulong clientId, int combo, float health)
+    public void UpdatePlayer(ulong clientId, int currentCombo, float health)
     {
         int side = GetPlayerSide(clientId);
         Slider healthSlider = side == 0 ? leftHealthSlider : rightHealthSlider;
@@ -156,29 +163,22 @@ public class GameplayUI : NetworkBehaviour
         Image fill = side == 0 ? leftComboFill : rightComboFill;
         Image background = side == 0 ? leftComboBackground : rightComboBackground;
 
-        //Update values
-        comboSlider.value = combo;
+        if (!comboBarValues.ContainsKey(clientId))
+            comboBarValues[clientId] = currentCombo;
+
+        //Update combo bar slider with bar value
+        comboSlider.value = comboBarValues[clientId];
         healthSlider.value = health;
-
-        var ability = ComboAbilityManager.Instance;
-
-        if (health <= 0f)
-            healthSlider.gameObject.SetActive(false);
-        else if (!healthSlider.gameObject.activeSelf)
-            healthSlider.gameObject.SetActive(true);
 
         if (fill != null && background != null)
         {
-            int currentMilestone = 0;
-            if (combo >= ability.unlockPoint3) currentMilestone = ability.unlockPoint3;
-            else if (combo >= ability.unlockPoint2) currentMilestone = ability.unlockPoint2;
-            else if (combo >= ability.unlockPoint1) currentMilestone = ability.unlockPoint1;
+            int milestone = ComboAbilityManager.Instance.GetCurrentMilestone(currentCombo);
 
             int lastMilestone = side == 0 ? lastMilestoneLeft : lastMilestoneRight;
 
-            if (currentMilestone != lastMilestone || (combo < ability.unlockPoint1 && lastMilestone >= ability.unlockPoint1))
+            if (milestone != lastMilestone || (currentCombo < ComboAbilityManager.Instance.unlockPoint1 && lastMilestone >= ComboAbilityManager.Instance.unlockPoint1))
             {
-                Color targetFill = currentMilestone switch
+                Color targetFill = milestone switch
                 {
                     7 => purpleColor,
                     5 => indigoColor,
@@ -188,17 +188,42 @@ public class GameplayUI : NetworkBehaviour
 
                 fill.color = targetFill;
 
-                if (side == 0) lastMilestoneLeft = currentMilestone;
-                else lastMilestoneRight = currentMilestone;
+                if (side == 0) lastMilestoneLeft = milestone;
+                else lastMilestoneRight = milestone;
 
                 //Notify LOCAL ability system
                 if (clientId == NetworkManager.Singleton.LocalClientId)
-                {
-                    Debug.Log("Calling MILESTONE update");
-                    SetLocalAbilityReadyText(combo);
-                }
+                    SetLocalAbilityReadyText(currentCombo);
             }
         }
+    }
+
+    public void ResetComboBar(ulong clientId)
+    {
+        comboBarValues[clientId] = 0;
+
+        int side = GetPlayerSide(clientId);
+        Slider comboSlider = side == 0 ? leftComboSlider : rightComboSlider;
+        if (comboSlider != null)
+            comboSlider.value = 0;
+
+        PulseComboOfPlayer(clientId, 0.2f);
+    }
+
+    public void IncrementComboBar(ulong clientId)
+    {
+        if (!comboBarValues.ContainsKey(clientId))
+            comboBarValues[clientId] = 0;
+
+        comboBarValues[clientId] += 1;
+
+        int side = GetPlayerSide(clientId);
+        Slider comboSlider = side == 0 ? leftComboSlider : rightComboSlider;
+        if (comboSlider != null)
+            comboSlider.value = comboBarValues[clientId];
+
+        //Update ability text based on bar value
+        SetLocalAbilityReadyText(comboBarValues[clientId]);
     }
 
     public int GetPlayerSide(ulong clientId)

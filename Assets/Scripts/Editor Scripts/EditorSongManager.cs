@@ -70,7 +70,7 @@ public class EditorSongManager : MonoBehaviour
 
     [Header("Camera & Input")]
     [SerializeField] private Transform trackContainer;
-    public float scrollSpeed = 5f;
+    public float scrollSpeed = 20f;
     [SerializeField] private float cameraReturnSpeed = 5f;
     float defaultCameraY = 0f;
     private Coroutine cameraMoveRoutine;
@@ -110,6 +110,7 @@ public class EditorSongManager : MonoBehaviour
     private void Start()
     {
         defaultCameraY = Camera.main.transform.position.y;
+        scrollSpeed = 40f;
         SpawnSegments();
         UpdateSegmentHeight();
         UpdateSegmentTexts();
@@ -142,7 +143,8 @@ public class EditorSongManager : MonoBehaviour
 
         for (int seg = 0; seg < segmentCount; seg++)
         {
-            float y = trackStartY + seg * segmentHeight;
+            float hitbarHeight = 12.37f;
+            float y = hitbarHeight + seg * segmentHeight;
             // Seconds for this segment (matches OnDrawGizmos)
             float seconds = (y - trackStartY) * speedMultiplier;
 
@@ -551,7 +553,12 @@ public class EditorSongManager : MonoBehaviour
 
     private void UpdateSegmentHeight()
     {
-        segmentHeight = ((60f / bpm) * speedMultiplier / (beatSubdivision / 4f)) * gridVisualScale;
+        //Base segment height for one beat
+        float baseHeight = (60f / bpm) * speedMultiplier * gridVisualScale;
+
+        //Apply subdivision (default 1 = whole beat, 2 = half-beat, 4 = quarter-beat, etc.)
+        segmentHeight = baseHeight / Mathf.Max(beatSubdivision, 1) * 40;
+
         Debug.Log($"Segment Height Updated: {segmentHeight} (Subdivision: 1/{beatSubdivision})");
     }
 
@@ -563,12 +570,13 @@ public class EditorSongManager : MonoBehaviour
 #if UNITY_EDITOR
         if (laneXPositions == null || laneXPositions.Length == 0) return;
 
-        // Recalc visual spacing if needed
+        //Recalc visual spacing if needed
         UpdateSegmentHeight();
 
         for (int seg = 0; seg < segmentCount; seg++)
         {
-            float y = trackStartY + seg * segmentHeight;
+            float hitbarHeight = 12.37f;
+            float y = hitbarHeight + seg * segmentHeight;
             float seconds = (y - trackStartY) * speedMultiplier;
 
             for (int i = 0; i < laneXPositions.Length; i++)
@@ -594,16 +602,16 @@ public class EditorSongManager : MonoBehaviour
     // ---------- HANDLE RUNTIME REBUILD when segmentCount / bpm / subdivision changes ----------
     private void UpdateSegmentRebuild()
     {
-        if (!isPlayingFromCamera)
-            return;
+        //if (!isPlayingFromCamera)
+        //    return;
 
-        // Only trigger rebuild if something changed
+        //Only trigger rebuild if something changed
         if (lastSegmentCount != segmentCount || Mathf.Abs(lastBpm - bpm) > 0.001f || lastSubdivision != beatSubdivision)
         {
-            // Clean & respawn
+            //Clean & respawn
             SpawnSegments();
 
-            // Update trackers
+            //Update trackers
             lastSegmentCount = segmentCount;
             lastBpm = bpm;
             lastSubdivision = beatSubdivision;
@@ -618,15 +626,15 @@ public class EditorSongManager : MonoBehaviour
         if (audioSource == null || audioSource.clip == null) return;
         if (!isPlayingFromCamera || !audioSource.isPlaying) return;
 
-        float songTime = audioSource.time;              // seconds into the song
-        float scrollOffset = songTime / speedMultiplier; // convert to world Y units
+        float songTime = audioSource.time;              //seconds into the song
+        float scrollOffset = songTime / speedMultiplier; //convert to world Y units
 
-        // For each segment compute baseY and then shift by scrollOffset
+        //For each segment compute baseY and then shift by scrollOffset
         for (int seg = 0; seg < segmentCount; seg++)
         {
             float baseY = trackStartY + seg * segmentHeight;
             float adjustedY = baseY - scrollOffset;
-            float seconds = (baseY - trackStartY) * speedMultiplier; // stable seconds label
+            float seconds = (baseY - trackStartY) * speedMultiplier; //stable seconds label
 
             for (int i = 0; i < laneXPositions.Length; i++)
             {
@@ -717,21 +725,18 @@ public class EditorSongManager : MonoBehaviour
 
     private EditorNote PlaceNoteOnTrack(Vector3 mouseScreenPos, bool hold)
     {
-        // Make sure the prefab is assigned
         if (notePrefab == null)
         {
             Debug.LogError("Note Prefab not assigned in EditorSongManager!");
             return null;
         }
 
-        // Make sure the camera exists
         if (Camera.main == null)
         {
             Debug.LogError("No MainCamera found! Tag your editor camera as 'MainCamera'.");
             return null;
         }
 
-        // Create a ray to the track plane
         Ray ray = Camera.main.ScreenPointToRay(mouseScreenPos);
         Plane plane = new Plane(Vector3.forward, new Vector3(0f, 0f, laneZ));
 
@@ -743,7 +748,7 @@ public class EditorSongManager : MonoBehaviour
 
         Vector3 hit = ray.GetPoint(enter);
 
-        // Find nearest lane X
+        //Snap to nearest lane
         int laneIndex = 0;
         float closestX = Mathf.Abs(hit.x - laneXPositions[0]);
         for (int i = 1; i < laneXPositions.Length; i++)
@@ -755,35 +760,19 @@ public class EditorSongManager : MonoBehaviour
                 laneIndex = i;
             }
         }
-
         hit.x = laneXPositions[laneIndex];
         hit.z = laneZ;
 
-        // Find nearest segment
+        //Snap Y to segment or beat marker
         int nearestSegment = Mathf.RoundToInt((hit.y - trackStartY) / segmentHeight);
 
-        // Check for existing note in the same lane & segment
-        //foreach (var n in notes)
-        //{
-        //    if (n == null) continue;
-        //    int nSegment = Mathf.RoundToInt((n.transform.position.y - trackStartY) / segmentHeight);
-        //    if (nSegment == nearestSegment && n.lane == laneIndex)
-        //    {
-        //        Debug.Log("Segment already has a note on this lane!");
-        //        return null;
-        //    }
-        //}
-
-        //Snap Y unless shift is held or C is pressed for marker snapping
         if (Input.GetKey(KeyCode.C))
         {
-            // Try to snap to nearest beat marker
             BeatMarkerVisualizer vis = FindObjectOfType<BeatMarkerVisualizer>();
             if (vis != null)
             {
                 float nearestY = float.MaxValue;
                 float minDist = float.MaxValue;
-
                 foreach (var marker in vis.GetActiveMarkers())
                 {
                     if (marker == null) continue;
@@ -794,21 +783,16 @@ public class EditorSongManager : MonoBehaviour
                         nearestY = marker.transform.position.y;
                     }
                 }
-
                 if (nearestY != float.MaxValue)
-                {
                     hit.y = nearestY;
-                    Debug.Log($"Snapped to beat marker at Y={nearestY:F3}");
-                }
             }
         }
         else if (!(Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)))
         {
-            // Regular segment snapping
             hit.y = trackStartY + nearestSegment * segmentHeight;
         }
 
-        // Instantiate note
+        //Instantiate note
         GameObject noteObj = Instantiate(notePrefab, hit, Quaternion.identity);
         if (noteObj == null)
         {
@@ -822,25 +806,23 @@ public class EditorSongManager : MonoBehaviour
             Debug.LogError("The notePrefab is missing the 'EditorNote' script!");
             return null;
         }
-        else
-        {
-            Debug.Log("Retrieved note script");
-        }
 
         noteScript.isHold = hold;
         noteScript.lane = laneIndex;
-        noteScript.time = (hit.y * speedMultiplier) + audioSource.time;
+
+        //Correctly calculate note time based on Y position
+        noteScript.time = (hit.y - trackStartY) * speedMultiplier;
 
         if (hold)
         {
             float lengthSegments = Mathf.Max(1, Mathf.Round(holdDurationEditor / segmentHeight));
-            noteScript.holdDuration = lengthSegments * segmentHeight * speedMultiplier;
+            noteScript.holdDuration = lengthSegments * segmentHeight * speedMultiplier; // in seconds
             noteScript.UpdateHoldVisual(lengthSegments * segmentHeight);
         }
 
         notes.Add(noteScript);
 
-        float snippetTime = Mathf.Abs(0 + (trackStartY - noteScript.transform.position.y) * speedMultiplier);
+        float snippetTime = Mathf.Abs((hit.y - trackStartY) * speedMultiplier);
         PlaySnippetAt(snippetTime, 0.35f);
 
         //Refresh autoplay

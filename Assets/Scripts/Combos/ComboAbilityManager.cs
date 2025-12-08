@@ -31,7 +31,8 @@ public class ComboAbilityManager : NetworkBehaviour
     ///<summary>Called by local input to try use an ability, sends a ServerRpc to the host if not host</summary>
     public void TryUseAbility(int combo, ulong clientId)
     {
-        int milestone = GetCurrentMilestone(combo);
+        int barValue = GameplayUI.Instance.GetComboBarValue(clientId);
+        int milestone = GetCurrentMilestone(barValue);
 
         if (milestone == 0)
         {
@@ -51,33 +52,34 @@ public class ComboAbilityManager : NetworkBehaviour
         if (NetworkManager.Singleton.IsHost)
         {
             //Host executes directly
-            HostUseAbility(clientId, combo);
+            HostUseAbility(clientId, barValue);
         }
         else
         {
             //Non host client requests host to execute
-            RequestAbilityServerRpc(clientId, combo);
+            RequestAbilityServerRpc(clientId, barValue);
         }
     }
 
     ///<summary>ServerRpc called by client to request ability usage</summary>
     [ServerRpc(RequireOwnership = false)]
-    private void RequestAbilityServerRpc(ulong clientId, int combo)
+    private void RequestAbilityServerRpc(ulong clientId, int comboBarValue)
     {
-        HostUseAbility(clientId, combo);
+        HostUseAbility(clientId, comboBarValue);
     }
 
     ///<summary>Host applies the ability effect and triggers ClientRpc for visuals</summary>
-    private void HostUseAbility(ulong clientId, int combo)
+    private void HostUseAbility(ulong clientId, int comboBarValue)
     {
-        int milestone = GetCurrentMilestone(combo);
+        int milestone = GetCurrentMilestone(comboBarValue);
         if (milestone == 0) return;
 
         var stats = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.GetComponent<PlayerStats>();
         if (stats == null) return;
 
         //Reset combo
-        stats.Combo.Value = 0;
+        //stats.Combo.Value = 0;
+        GameplayUI.Instance.ResetComboBar(clientId);
 
         float uiAnimationDuration = 0f;
 
