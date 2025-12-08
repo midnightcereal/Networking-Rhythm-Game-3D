@@ -1,8 +1,10 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using TMPro;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
 
 [System.Serializable]
 public class SongInfo
@@ -118,6 +120,12 @@ public class SongMenuGrid : MonoBehaviour
             previewAudioSource.Stop();
             previewAudioSource.clip = song.previewClip;
             previewAudioSource.Play();
+        }
+
+        //Notify SongSelectionManager (host only)
+        if (NetworkManager.Singleton.IsHost && SongSelectionManager.Instance != null)
+        {
+            SongSelectionManager.Instance?.SetSelectedSong(song.songName);
         }
     }
 

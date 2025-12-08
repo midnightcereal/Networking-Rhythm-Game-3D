@@ -56,6 +56,7 @@ public class SongManager : MonoBehaviour
 
     private void Start()
     {
+        SongSelectionManager.Instance?.ApplySelectedSongToGame();
         LoadSong();
     }
 

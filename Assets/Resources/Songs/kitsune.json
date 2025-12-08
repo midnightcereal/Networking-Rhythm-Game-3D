@@ -1,10 +1,10 @@
 {
-    "songName": "kitsune",
+    "songName": "Kitsune",
     "artist": "Me",
     "difficulty": 4,
     "bpm": 178.0,
     "speedMultiplier": 0.10000000149011612,
-    "audioFile": "kitsune",
+    "audioFile": "Kitsune",
     "colourChangeBeats": 1,
     "availableColours": [
         "#ff4b81",
