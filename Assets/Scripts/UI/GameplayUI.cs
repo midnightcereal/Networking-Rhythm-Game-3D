@@ -21,6 +21,10 @@ public class GameplayUI : NetworkBehaviour
     [Header("Screen Blur Overlay")]
     public Image blurOverlay;
 
+    [Header("Combo Bar Parent Transforms")]
+    public Transform leftComboParent;
+    public Transform rightComboParent;
+
     private string[] abilityNames = new string[]
     {
     "",
@@ -217,6 +221,7 @@ public class GameplayUI : NetworkBehaviour
         healthSlider.gameObject.SetActive(false);
     }
 
+    #region UI Animations
     ///<summary>Called from ComboManager when health is deducted</summary>
     public void ShowDamagePopup(ulong clientId, float damageAmount)
     {
@@ -268,6 +273,58 @@ public class GameplayUI : NetworkBehaviour
         Destroy(popup);
     }
 
+    //==== UI PULSING ====
+    ///<summary>Called from ComboAbilityManager on ability activate</summary>
+    public void PulseComboOfPlayer(ulong clientId, float duration)
+    {
+        int side = GetPlayerSide(clientId);
+
+        Transform target = side == 0 ? leftComboParent : rightComboParent;
+
+        Debug.Log("Triggered UI PULSE");
+        TriggerComboPulse(target, duration);
+    }
+
+    public void TriggerComboPulse(Transform target, float duration)
+    {
+        if (target == null)
+        {
+            Debug.LogWarning("TriggerComboPulse called but no target transform was provided.");
+            return;
+        }
+
+        Debug.Log("Started UI PULSE");
+        StartCoroutine(PulseRotateRoutine(target, duration));
+    }
+
+    private IEnumerator PulseRotateRoutine(Transform target, float duration)
+    {
+        float timer = 0f;
+        float pulseSpeed = 10f;
+        float pulseAmount = 7f;
+
+        Vector3 originalRotation = target.localEulerAngles;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+
+            float angle = Mathf.Sin(Time.time * pulseSpeed) * pulseAmount;
+
+            Vector3 rot = originalRotation;
+            rot.y += angle;
+
+            target.localEulerAngles = rot;
+
+            yield return null;
+        }
+
+        target.localEulerAngles = new Vector3(0,0,0);
+    }
+    //===================
+    #endregion
+
+    #region ComboAbilityManager Stuff
     ///<summary>Called by ComboAbilityManager</summary>
     public void TriggerScreenBlur(float duration)
     {
@@ -284,13 +341,13 @@ public class GameplayUI : NetworkBehaviour
     private IEnumerator ScreenBlurRoutine(float duration)
     {
         //Fade in to alpha 1
-        yield return StartCoroutine(FadeBlur(0f, 0.7f, 0.35f));
+        yield return StartCoroutine(FadeBlur(0f, 1f, 0.35f));
 
         //Stay visible for the ability duration
         yield return new WaitForSeconds(duration);
 
         //Fade back to alpha 0
-        yield return StartCoroutine(FadeBlur(0.7f, 0f, 0.35f));
+        yield return StartCoroutine(FadeBlur(1f, 0f, 0.35f));
     }
 
     private IEnumerator FadeBlur(float from, float to, float time)
@@ -313,4 +370,5 @@ public class GameplayUI : NetworkBehaviour
         colour.a = to;
         blurOverlay.color = colour;
     }
+    #endregion
 }

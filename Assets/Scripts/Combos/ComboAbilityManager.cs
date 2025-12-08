@@ -60,7 +60,6 @@ public class ComboAbilityManager : NetworkBehaviour
         }
     }
 
-
     ///<summary>ServerRpc called by client to request ability usage</summary>
     [ServerRpc(RequireOwnership = false)]
     private void RequestAbilityServerRpc(ulong clientId, int combo)
@@ -80,21 +79,28 @@ public class ComboAbilityManager : NetworkBehaviour
         //Reset combo
         stats.Combo.Value = 0;
 
+        float uiAnimationDuration = 0f;
+
         //Execute ability
         switch (milestone)
         {
             case 1: //Health regen self
-                ApplyHealthRegenClientRpc(clientId);
+                uiAnimationDuration = regenDuration;
+                ApplyHealthRegenClientRpc(clientId, uiAnimationDuration);
                 break;
             case 2: //Screen blur opponent
+                uiAnimationDuration = screenBlurDuration;
                 ulong opponentId = GetOpponentId(clientId);
-                ApplyScreenBlurClientRpc(opponentId);
+                ApplyScreenBlurClientRpc(opponentId, uiAnimationDuration);
                 break;
             case 3: //Hide hitline opponent
+                uiAnimationDuration = 5f;
                 ulong opponent2Id = GetOpponentId(clientId);
-                ApplyHitlineHideClientRpc(opponent2Id);
+                ApplyHitlineHideClientRpc(opponent2Id, uiAnimationDuration);
                 break;
         }
+
+        GameplayUI.Instance.PulseComboOfPlayer(clientId, uiAnimationDuration);
     }
 
     private ulong GetOpponentId(ulong clientId)
@@ -115,14 +121,14 @@ public class ComboAbilityManager : NetworkBehaviour
     #region ClientRpc Effects
 
     [ClientRpc]
-    private void ApplyHealthRegenClientRpc(ulong targetClientId)
+    private void ApplyHealthRegenClientRpc(ulong targetClientId, float duration)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
-        StartCoroutine(HealthRegenCoroutine());
+        StartCoroutine(HealthRegenCoroutine(duration));
     }
 
     [ClientRpc]
-    private void ApplyScreenBlurClientRpc(ulong targetClientId)
+    private void ApplyScreenBlurClientRpc(ulong targetClientId, float duration)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
 
@@ -134,7 +140,7 @@ public class ComboAbilityManager : NetworkBehaviour
 
 
     [ClientRpc]
-    private void ApplyHitlineHideClientRpc(ulong targetClientId)
+    private void ApplyHitlineHideClientRpc(ulong targetClientId, float duration)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
         //CALL HIDE HITLINE HERE
@@ -145,13 +151,13 @@ public class ComboAbilityManager : NetworkBehaviour
 
     #region Local Coroutines
 
-    private IEnumerator HealthRegenCoroutine()
+    private IEnumerator HealthRegenCoroutine(float duration)
     {
         var stats = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerStats>();
         stats.Health.Value += regenAmount;
 
         float elapsed = 0f;
-        while (elapsed < regenDuration)
+        while (elapsed < duration)
         {
             elapsed += Time.deltaTime;
             stats.Health.Value = Mathf.Min(100f, stats.Health.Value + regenPerSecond * Time.deltaTime);
