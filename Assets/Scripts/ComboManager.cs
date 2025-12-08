@@ -88,14 +88,18 @@ public class ComboManager : MonoBehaviour
         combo++;
 
         //Update visual combo bar for local player
-        GameplayUI.Instance.IncrementComboBar(playerClientId);
+        //GameplayUI.Instance.IncrementComboBar(playerClientId);
 
         //Play Hit SFX - TOO DISTRACTING
         //if (audioSource && hitSound)
         //    audioSource.PlayOneShot(hitSound);
 
         //Network the combo increase
-        if (playerStats != null) playerStats.UpdateComboServerRpc(combo);
+        if (playerStats != null)
+        {
+            playerStats.UpdateComboServerRpc(combo);
+            playerStats.IncrementVisualComboServerRpc();
+        }
         UpdateComboText();
 
         if (combo < 2) return;

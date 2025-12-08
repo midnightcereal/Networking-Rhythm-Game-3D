@@ -42,8 +42,8 @@ public class InputManager : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.Space))
             {
-                int currentCombo = ComboManager.Instance?.combo ?? 0;
-                ComboAbilityManager.Instance?.TryUseAbility(currentCombo, NetworkManager.Singleton.LocalClientId);
+                int visualCombo = GameplayUI.Instance.GetComboBarValue(NetworkManager.Singleton.LocalClientId);
+                ComboAbilityManager.Instance?.TryUseAbility(visualCombo, NetworkManager.Singleton.LocalClientId);
             }
 
             if (Input.GetKeyDown(KeyCode.Escape))

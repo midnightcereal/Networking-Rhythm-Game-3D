@@ -5,6 +5,7 @@ public class PlayerStats : NetworkBehaviour
 {
     public NetworkVariable<int> Combo = new(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
     public NetworkVariable<float> Health = new(100f, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Owner);
+    public NetworkVariable<int> VisualCombo = new NetworkVariable<int>(0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
 
     public override void OnNetworkSpawn()
     {
@@ -21,6 +22,10 @@ public class PlayerStats : NetworkBehaviour
         //Update UI when values change
         Combo.OnValueChanged += OnComboChanged;
         Health.OnValueChanged += OnHealthChanged;
+        VisualCombo.OnValueChanged += (prev, curr) =>
+        {
+            GameplayUI.Instance?.UpdatePlayerVisualCombo(OwnerClientId, curr);
+        };
 
         OnComboChanged(-1, Combo.Value);
         OnHealthChanged(-1f, Health.Value);
@@ -53,6 +58,18 @@ public class PlayerStats : NetworkBehaviour
     {
         //Debug.Log($"[PlayerStats] ServerRpc: UpdateComboServerRpc({newCombo}) from Client {OwnerClientId}");
         Combo.Value = newCombo;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void IncrementVisualComboServerRpc()
+    {
+        VisualCombo.Value++;
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    public void SetVisualComboServerRpc(int newValue)
+    {
+        VisualCombo.Value = newValue;
     }
 
     [ServerRpc(RequireOwnership = false)]

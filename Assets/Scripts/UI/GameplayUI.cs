@@ -73,9 +73,9 @@ public class GameplayUI : NetworkBehaviour
         }
         Instance = this;
 
-        SetupSlider(leftComboSlider, 100f, 0f);
+        SetupSlider(leftComboSlider, 50, 0f);
         SetupSlider(leftHealthSlider, 100f, 100f);
-        SetupSlider(rightComboSlider, 100f, 0f);
+        SetupSlider(rightComboSlider, 50, 0f);
         SetupSlider(rightHealthSlider, 100f, 100f);
 
         if (leftPlayerNameText) leftPlayerNameText.text = "";
@@ -172,8 +172,7 @@ public class GameplayUI : NetworkBehaviour
 
         if (fill != null && background != null)
         {
-            int milestone = ComboAbilityManager.Instance.GetCurrentMilestone(currentCombo);
-
+            int milestone = ComboAbilityManager.Instance.GetCurrentMilestone(comboBarValues[clientId]);
             int lastMilestone = side == 0 ? lastMilestoneLeft : lastMilestoneRight;
 
             if (milestone != lastMilestone || (currentCombo < ComboAbilityManager.Instance.unlockPoint1 && lastMilestone >= ComboAbilityManager.Instance.unlockPoint1))
@@ -193,38 +192,44 @@ public class GameplayUI : NetworkBehaviour
 
                 //Notify LOCAL ability system
                 if (clientId == NetworkManager.Singleton.LocalClientId)
-                    SetLocalAbilityReadyText(currentCombo);
+                    SetLocalAbilityReadyText(comboBarValues[clientId]);
             }
         }
     }
 
     public void ResetComboBar(ulong clientId)
     {
-        comboBarValues[clientId] = 0;
-
-        int side = GetPlayerSide(clientId);
-        Slider comboSlider = side == 0 ? leftComboSlider : rightComboSlider;
-        if (comboSlider != null)
-            comboSlider.value = 0;
+        var playerStats = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.GetComponent<PlayerStats>();
+        if (playerStats != null)
+            playerStats.SetVisualComboServerRpc(0);
 
         PulseComboOfPlayer(clientId, 0.2f);
     }
 
     public void IncrementComboBar(ulong clientId)
     {
+        var playerStats = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.GetComponent<PlayerStats>();
+        if (playerStats != null)
+            playerStats.IncrementVisualComboServerRpc();
+    }
+
+    public void UpdatePlayerVisualCombo(ulong clientId, int visualComboValue)
+    {
         if (!comboBarValues.ContainsKey(clientId))
             comboBarValues[clientId] = 0;
 
-        comboBarValues[clientId] += 1;
+        comboBarValues[clientId] = visualComboValue;
 
         int side = GetPlayerSide(clientId);
         Slider comboSlider = side == 0 ? leftComboSlider : rightComboSlider;
         if (comboSlider != null)
-            comboSlider.value = comboBarValues[clientId];
+            comboSlider.value = visualComboValue;
 
-        //Update ability text based on bar value
-        SetLocalAbilityReadyText(comboBarValues[clientId]);
+        //Update ability text for local player
+        if (clientId == NetworkManager.Singleton.LocalClientId)
+            SetLocalAbilityReadyText(visualComboValue);
     }
+
 
     public int GetPlayerSide(ulong clientId)
     {
