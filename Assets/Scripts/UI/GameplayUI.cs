@@ -18,6 +18,9 @@ public class GameplayUI : NetworkBehaviour
     [Header("Ability Feedback")]
     public TextMeshProUGUI abilityText;
 
+    [Header("Screen Blur Overlay")]
+    public Image blurOverlay;
+
     private string[] abilityNames = new string[]
     {
     "",
@@ -263,5 +266,51 @@ public class GameplayUI : NetworkBehaviour
         }
 
         Destroy(popup);
+    }
+
+    ///<summary>Called by ComboAbilityManager</summary>
+    public void TriggerScreenBlur(float duration)
+    {
+        if (blurOverlay == null)
+        {
+            Debug.LogWarning("No screen blur overlay assigned in GameplayUI!");
+            return;
+        }
+
+        //StopAllCoroutines();
+        StartCoroutine(ScreenBlurRoutine(duration));
+    }
+
+    private IEnumerator ScreenBlurRoutine(float duration)
+    {
+        //Fade in to alpha 1
+        yield return StartCoroutine(FadeBlur(0f, 0.7f, 0.35f));
+
+        //Stay visible for the ability duration
+        yield return new WaitForSeconds(duration);
+
+        //Fade back to alpha 0
+        yield return StartCoroutine(FadeBlur(0.7f, 0f, 0.35f));
+    }
+
+    private IEnumerator FadeBlur(float from, float to, float time)
+    {
+        float elapsed = 0f;
+
+        Color colour = blurOverlay.color;
+
+        while (elapsed < time)
+        {
+            elapsed += Time.deltaTime;
+            float t = elapsed / time;
+
+            colour.a = Mathf.Lerp(from, to, t);
+            blurOverlay.color = colour;
+
+            yield return null;
+        }
+
+        colour.a = to;
+        blurOverlay.color = colour;
     }
 }

@@ -125,9 +125,13 @@ public class ComboAbilityManager : NetworkBehaviour
     private void ApplyScreenBlurClientRpc(ulong targetClientId)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
-        //CALL UI BLUR HERE
+
         Debug.Log("[ComboAbility] Screen Blur triggered for client " + targetClientId);
+
+        //Trigger the UI blur effect locally
+        GameplayUI.Instance.TriggerScreenBlur(ComboAbilityManager.Instance.screenBlurDuration);
     }
+
 
     [ClientRpc]
     private void ApplyHitlineHideClientRpc(ulong targetClientId)
