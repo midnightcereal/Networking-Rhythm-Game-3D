@@ -1576,6 +1576,7 @@ GameObject:
   - component: {fileID: 8903714969353555322}
   - component: {fileID: 6884551007435725319}
   - component: {fileID: 3307381526911363938}
+  - component: {fileID: 3762172351187377680}
   m_Layer: 0
   m_Name: Hit Bar
   m_TagString: Untagged
@@ -1669,6 +1670,18 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &3762172351187377680
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3500518798393750579}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d931a54f80e389544a0d38bb1f0290e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &3535135303617631050
 GameObject:
   m_ObjectHideFlags: 0

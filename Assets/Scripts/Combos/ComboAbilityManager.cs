@@ -100,7 +100,10 @@ public class ComboAbilityManager : NetworkBehaviour
                 break;
         }
 
-        GameplayUI.Instance.PulseComboOfPlayer(clientId, uiAnimationDuration);
+        //Pulse on activating player's screen
+        PulseComboClientRpc(clientId, uiAnimationDuration);
+        //Pulse on opponent's screen
+        PulseOpponentClientRpc(clientId, uiAnimationDuration);
     }
 
     private ulong GetOpponentId(ulong clientId)
@@ -121,6 +124,27 @@ public class ComboAbilityManager : NetworkBehaviour
     #region ClientRpc Effects
 
     [ClientRpc]
+    private void PulseComboClientRpc(ulong targetClientId, float duration)
+    {
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+
+        GameplayUI.Instance.PulseComboOfPlayer(targetClientId, duration);
+    }
+
+    [ClientRpc]
+    private void PulseOpponentClientRpc(ulong activatingClientId, float duration)
+    {
+        ulong localId = NetworkManager.Singleton.LocalClientId;
+
+        if (localId == activatingClientId)
+            return;
+
+        //Pulse using the activator's side
+        GameplayUI.Instance.PulseComboOfPlayer(activatingClientId, duration);
+    }
+
+    [ClientRpc]
     private void ApplyHealthRegenClientRpc(ulong targetClientId, float duration)
     {
         if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
@@ -138,13 +162,16 @@ public class ComboAbilityManager : NetworkBehaviour
         GameplayUI.Instance.TriggerScreenBlur(ComboAbilityManager.Instance.screenBlurDuration);
     }
 
-
     [ClientRpc]
     private void ApplyHitlineHideClientRpc(ulong targetClientId, float duration)
     {
-        if (NetworkManager.Singleton.LocalClientId != targetClientId) return;
-        //CALL HIDE HITLINE HERE
+        if (NetworkManager.Singleton.LocalClientId != targetClientId)
+            return;
+
         Debug.Log("[ComboAbility] Hitline Hide triggered for client " + targetClientId);
+
+        //Hide opponent's local hitline
+        HideHitbar.Instance?.HideForDuration(duration);
     }
 
     #endregion

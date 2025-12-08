@@ -45,6 +45,23 @@ public class InputManager : MonoBehaviour
                 int currentCombo = ComboManager.Instance?.combo ?? 0;
                 ComboAbilityManager.Instance?.TryUseAbility(currentCombo, NetworkManager.Singleton.LocalClientId);
             }
+
+            if (Input.GetKeyDown(KeyCode.Escape))
+            {
+                Debug.Log("Escape pressed: leaving game/lobby...");
+                if (LobbyManager.Instance != null)
+                {
+                    LobbyManager.Instance.LeaveLobby();
+                }
+                else
+                {
+                    if (NetworkManager.Singleton != null)
+                    {
+                        NetworkManager.Singleton.Shutdown();
+                        UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby");
+                    }
+                }
+            }
         }
     }
 

@@ -300,8 +300,8 @@ public class GameplayUI : NetworkBehaviour
     private IEnumerator PulseRotateRoutine(Transform target, float duration)
     {
         float timer = 0f;
-        float pulseSpeed = 10f;
-        float pulseAmount = 7f;
+        float pulseSpeed = 8f;
+        float pulseAmount = 5f;
 
         Vector3 originalRotation = target.localEulerAngles;
 

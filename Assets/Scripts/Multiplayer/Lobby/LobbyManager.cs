@@ -3,7 +3,6 @@ using TMPro;
 using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using UnityEngine.UI;
 
 public class LobbyManager : MonoBehaviour
 {
@@ -17,14 +16,15 @@ public class LobbyManager : MonoBehaviour
     [Header("Settings")]
     public int maxPlayers = 2;
 
-    //Track all locally spawned NetworkPlayers
-    private readonly List<NetworkPlayer> spawnedPlayers = new();
+    private readonly List<NetworkPlayer> localPlayers = new();
+    private readonly List<GameObject> playerUIObjects = new(); //track instantiated UI objects
+
+    private bool hasLocalPlayerSpawned = false;
 
     private void Awake()
     {
         Instance = this;
 
-        //Subscribe to client connect/disconnect
         if (NetworkManager.Singleton != null)
         {
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
@@ -41,125 +41,154 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
-    #region Client Connect/Disconnect
-
-    private void OnClientConnected(ulong clientId)
+    private void Update()
     {
-        //if (!NetworkManager.Singleton.IsServer) return;
-
-        ////Check max players
-        //if (NetworkManager.Singleton.ConnectedClients.Count > maxPlayers)
-        //{
-        //    Debug.LogWarning("Max players reached! Rejecting connection.");
-        //    NetworkManager.Singleton.DisconnectClient(clientId);
-        //    return;
-        //}
-
-        ////Spawn NetworkPlayer for the joining client
-        //var playerObj = Instantiate(NetworkManager.Singleton.NetworkConfig.PlayerPrefab);
-        //playerObj.GetComponent<NetworkObject>().SpawnAsPlayerObject(clientId);
-    }
-
-    private void OnClientDisconnected(ulong clientId)
-    {
-        //Clean up UI when a player leaves
-        RebuildLobbyUI();
-        UpdatePlayerCount();
-    }
-
-    #endregion
-
-    #region Spawn/Despawn Handling
-
-    /// <summary>
-    /// Called by NetworkPlayer when it spawns locally
-    /// </summary>
-    /// <param name="player"></param>
-    public void PlayerSpawned(NetworkPlayer player)
-    {
-        if (!spawnedPlayers.Contains(player))
-            spawnedPlayers.Add(player);
-
-        RebuildLobbyUI();
-        UpdatePlayerCount();
-    }
-
-    /// <summary>
-    /// Called by NetworkPlayer when it despawns
-    /// </summary>
-    /// <param name="player"></param>
-    public void PlayerDespawned(NetworkPlayer player)
-    {
-        if (spawnedPlayers.Contains(player))
-            spawnedPlayers.Remove(player);
-
-        RebuildLobbyUI();
-        UpdatePlayerCount();
-    }
-
-    /// <summary>
-    /// ClientRpc to tell clients to leave
-    /// </summary>
-    [ClientRpc]
-    private void DisconnectClientsClientRpc()
-    {
-        if (!NetworkManager.Singleton.IsHost)
+        //Only run this check after local player has spawned
+        if (!hasLocalPlayerSpawned)
         {
-            //Cleanly shut down network client
-            NetworkManager.Singleton.Shutdown();
-
-            //Reload lobby scene
-            UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby");
+            NetworkPlayer localPlayer = FindLocalPlayer();
+            if (localPlayer != null)
+                hasLocalPlayerSpawned = true;
+            else
+                return; //wait until local player exists
         }
-    }
 
-    #endregion
+        //Count all NetworkPlayer prefabs in the scene
+        NetworkPlayer[] players = FindObjectsOfType<NetworkPlayer>();
 
-    #region UI
-
-    public void RebuildLobbyUI()
-    {
-        //Clear old UI
-        foreach (Transform child in playerListParent)
-            Destroy(child.gameObject);
-
-        //Create new UI for each spawned player
-        foreach (var player in spawnedPlayers)
+        if (NetworkManager.Singleton.IsHost)
         {
-            GameObject textObj = Instantiate(playerNameTextPrefab, playerListParent);
-            var textComponent = textObj.GetComponent<Text>();
-            if (textComponent != null)
+            if (players.Length == 1)
             {
-                //textComponent.text = player.PlayerName.Value.ToString();
+                RebuildLobbyUI();
+            }
+        }
+        else
+        {
+            //If no players exist, host left or lobby ended
+            if (players.Length == 0)
+            {
+                NetworkManager.Singleton.Shutdown();
+                SceneManager.LoadScene("Lobby");
             }
         }
     }
 
-    /// <summary>
-    /// Update the current player count text
-    /// </summary>
+    private NetworkPlayer FindLocalPlayer()
+    {
+        NetworkPlayer[] players = FindObjectsOfType<NetworkPlayer>();
+        foreach (var p in players)
+        {
+            if (p.OwnerClientId == NetworkManager.Singleton.LocalClientId)
+                return p;
+        }
+        return null;
+    }
+
+    #region Network Callbacks
+
+    private void OnClientConnected(ulong clientId)
+    {
+        if (NetworkManager.Singleton.IsHost)
+        {
+            RebuildLobbyUI();
+        }
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        if (NetworkManager.Singleton.IsHost)
+        {
+            RebuildLobbyUI();
+        }
+    }
+
+    #endregion
+
+    #region Player Tracking
+
+    public void PlayerSpawned(NetworkPlayer player)
+    {
+        if (!localPlayers.Contains(player))
+            localPlayers.Add(player);
+
+        RebuildLobbyUI();
+    }
+
+    public void PlayerDespawned(NetworkPlayer player)
+    {
+        if (localPlayers.Contains(player))
+            localPlayers.Remove(player);
+
+        RebuildLobbyUI();
+    }
+
+    #endregion
+
+    #region UI Handling
+
+    public void RebuildLobbyUI()
+    {
+        //Destroy old UI
+        foreach (var uiObj in playerUIObjects)
+            if (uiObj != null)
+                Destroy(uiObj);
+        playerUIObjects.Clear();
+
+        //Update player list
+        NetworkPlayer[] players = FindObjectsOfType<NetworkPlayer>();
+        localPlayers.Clear();
+        localPlayers.AddRange(players);
+
+        foreach (var p in localPlayers)
+        {
+            GameObject textObj = Instantiate(playerNameTextPrefab, playerListParent);
+            playerUIObjects.Add(textObj);
+
+            var textComponent = textObj.GetComponent<TextMeshProUGUI>();
+            if (textComponent != null)
+            {
+                string display = p.DisplayName.Value.ToString();
+                if (p.OwnerClientId == NetworkManager.Singleton.LocalClientId)
+                    display += " (You)";
+                textComponent.text = display;
+            }
+        }
+
+        UpdatePlayerCount();
+    }
+
     public void UpdatePlayerCount()
     {
         if (playerCountText != null)
         {
-            playerCountText.text = $"Players: {spawnedPlayers.Count}/{maxPlayers}";
+            playerCountText.text = $"Players: {localPlayers.Count}/{maxPlayers}";
         }
     }
 
+    #endregion
+
+    #region Leave Lobby
+
     public void LeaveLobby()
     {
+        //Clear UI immediately
+        foreach (var uiObj in playerUIObjects)
+            if (uiObj != null)
+                Destroy(uiObj);
+        playerUIObjects.Clear();
+
+        playerCountText.text = "";
+
         if (NetworkManager.Singleton.IsHost)
         {
-            //Notify all clients to disconnect
-            DisconnectClientsClientRpc();
-
-            //Stop the host
+            //Host shuts down server -> clients detect 0 players
             NetworkManager.Singleton.Shutdown();
-            SceneManager.LoadScene("Lobby"); //Reload lobby for host
+            SceneManager.LoadScene("Lobby");
         }
         else
         {
-            //Client leaving normally
+            //Client leaves
             NetworkManager.Singleton.Shutdown();
             SceneManager.LoadScene("Lobby");
         }

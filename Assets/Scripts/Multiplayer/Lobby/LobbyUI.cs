@@ -6,10 +6,17 @@ using UnityEngine.SceneManagement;
 
 public class LobbyUI : MonoBehaviour
 {
+    public static LobbyUI Instance;
+
     public Button hostButton;
     public Button joinButton;
     public Button leaveButton;
     public Button startGameButton;
+
+    private void Awake()
+    {
+        Instance = this;
+    }
 
     private void Start()
     {
