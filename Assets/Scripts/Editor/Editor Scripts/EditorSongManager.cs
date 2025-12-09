@@ -139,7 +139,7 @@ public class EditorSongManager : MonoBehaviour
         if (laneXPositions == null || laneXPositions.Length == 0) return;
 
         // Recalculate segmentHeight so visuals are in sync
-        UpdateSegmentHeight(); // keeps your formula centralized
+        UpdateSegmentHeight();
 
         for (int seg = 0; seg < segmentCount; seg++)
         {
@@ -188,7 +188,7 @@ public class EditorSongManager : MonoBehaviour
         }
         runtimeSegments.Clear();
 
-        // Optional: find any lingering TMP labels in the scene and remove them
+        //Find any TMP labels in the scene and remove them
 #if UNITY_EDITOR
         TMPro.TextMeshProUGUI[] tmpLabels = FindObjectsOfType<TMPro.TextMeshProUGUI>();
         foreach (var t in tmpLabels)
@@ -733,7 +733,7 @@ public class EditorSongManager : MonoBehaviour
 
         if (Camera.main == null)
         {
-            Debug.LogError("No MainCamera found! Tag your editor camera as 'MainCamera'.");
+            Debug.LogError("No MainCamera found! Tag editor camera as 'MainCamera'.");
             return null;
         }
 

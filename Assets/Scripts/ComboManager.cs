@@ -34,13 +34,15 @@ public class ComboManager : MonoBehaviour
     {
         Instance = this;
 
+        //Cache the miss effect at game start to avoid freeze on initial call
         cachedMissEffect = FindObjectOfType<MissEffect>();
 
         if (comboText != null)
+            //Store combo text position
             originalPos = comboText.transform.localPosition;
 
+        //Retrieve correct playerStats & playerId
         playerStats = NetworkManager.Singleton.LocalClient?.PlayerObject?.GetComponent<PlayerStats>();
-
         playerClientId = playerStats.OwnerClientId;
     }
 
@@ -71,6 +73,7 @@ public class ComboManager : MonoBehaviour
         }
         isHolding = false;
         if (comboText != null)
+            //Reset combo text to original position
             comboText.transform.localPosition = originalPos;
     }
 
@@ -122,6 +125,7 @@ public class ComboManager : MonoBehaviour
         }
         else
         {
+            //Calculate how much health to lose based on current combo
             float deduction = (combo > 30) ? 2f : 5f;
             float oldHealth = playerStats.Health.Value;
             float newHealth = Mathf.Max(0f, oldHealth - deduction);
@@ -163,6 +167,7 @@ public class ComboManager : MonoBehaviour
     {
         if (!comboText) return;
 
+        //Set combo text to active only when our combo is > 1
         comboText.gameObject.SetActive(combo >= 2);
         if (combo >= 2)
             comboText.text = $"Combo: {combo}";
@@ -192,6 +197,7 @@ public class ComboManager : MonoBehaviour
             yield return null;
         }
 
+        //Reset text to original position
         comboText.transform.localPosition = originalPos;
     }
 

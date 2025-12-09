@@ -35,6 +35,7 @@ public class InputManager : MonoBehaviour
         {
             if (Input.GetKeyDown(laneKeys[lane]))
             {
+                //Check if hit note
                 laneHolding[lane] = true;
                 bool hitSomething = CheckHit(lane);
 
@@ -54,6 +55,7 @@ public class InputManager : MonoBehaviour
                 if (localPlayerStats.Health.Value <= 0f)
                     return;
 
+                //Check if can use ability
                 int visualCombo = GameplayUI.Instance.GetComboBarValue(NetworkManager.Singleton.LocalClientId);
                 ComboAbilityManager.Instance?.TryUseAbility(visualCombo, NetworkManager.Singleton.LocalClientId);
             }
@@ -63,12 +65,14 @@ public class InputManager : MonoBehaviour
                 Debug.Log("Escape pressed: leaving game/lobby...");
                 if (LobbyManager.Instance != null)
                 {
+                    //Leave lobby
                     LobbyManager.Instance.LeaveLobby();
                 }
                 else
                 {
                     if (NetworkManager.Singleton != null)
                     {
+                        //Disconnect
                         NetworkManager.Singleton.Shutdown();
                         UnityEngine.SceneManagement.SceneManager.LoadScene("Lobby");
                     }
@@ -91,6 +95,7 @@ public class InputManager : MonoBehaviour
             if (Mathf.Abs(note.transform.position.x - laneSpawnPoints[lane].position.x) > 0.5f)
                 continue;
 
+            //Check if note is within valid hit distance
             float dist = Mathf.Abs(note.transform.position.y - hitLine.position.y);
             if (dist < closestDist)
             {
@@ -101,6 +106,7 @@ public class InputManager : MonoBehaviour
 
         if (closest != null && closestDist <= hitTolerance)
         {
+            //Successful note hit
             closest.Hit();
             Debug.Log($"Hit lane {lane} ({(closest.isHold ? "Hold" : "Tap")})");
             return true;
@@ -116,9 +122,11 @@ public class InputManager : MonoBehaviour
         Note[] notes = FindObjectsOfType<Note>();
         foreach (var note in notes)
         {
+            //Find note that is closest
             if (Mathf.Abs(note.transform.position.x - laneSpawnPoints[lane].position.x) > 0.5f)
                 continue;
 
+            //Release hold
             if (note.isHold)
                 note.ReleaseHold();
         }

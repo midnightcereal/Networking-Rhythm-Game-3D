@@ -62,6 +62,7 @@ public class GameSceneManager : NetworkBehaviour
         if (localRhythmInstance != null)
             Destroy(localRhythmInstance);
 
+        //Locally spawn the rhythm track prefab for each player (contains input manager/ combo manager/ UI elements etc.)
         localRhythmInstance = Instantiate(localRhythmPrefab);
         //Debug.Log("Spawned local rhythm setup for local client");
     }
@@ -69,6 +70,7 @@ public class GameSceneManager : NetworkBehaviour
     [ClientRpc]
     private void StartGameClientRpc()
     {
+        //Start game for all players
         Debug.Log("Game started for everyone!");
         double startTime = NetworkManager.ServerTime.Time + 1.0;
         StartCoroutine(CountdownStart(startTime));
@@ -90,10 +92,12 @@ public class GameSceneManager : NetworkBehaviour
             yield break;
         }
 
+        //Retrieve song info
         var songData = songManager.GetSongData();
 
         if (introUI != null && songData != null)
         {
+            //Start the song intro sequence - display artist/ difficulty then countdown
             yield return introUI.PlayIntroSequence(songData.songName, songData.artist, songData.difficulty);
         }
 

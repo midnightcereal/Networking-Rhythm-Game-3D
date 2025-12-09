@@ -63,6 +63,7 @@ public class PlayerStats : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void IncrementVisualComboServerRpc()
     {
+        //Increase visual combo bar fill
         VisualCombo.Value++;
     }
 
@@ -90,6 +91,7 @@ public class PlayerStats : NetworkBehaviour
     [ClientRpc]
     public void ShowDamagePopupClientRpc(ulong clientId, float damageAmount)
     {
+        //Call damage popup
         GameplayUI.Instance?.ShowDamagePopup(clientId, damageAmount);
 
         //Only trigger miss flash for the player who owns this client
@@ -102,6 +104,7 @@ public class PlayerStats : NetworkBehaviour
     [ServerRpc(RequireOwnership = false)]
     public void HealServerRpc(float healAmount)
     {
+        //call health popup
         Health.Value = Mathf.Min(100f, Health.Value + healAmount);
         ShowHealthPopupClientRpc(OwnerClientId, healAmount);
     }

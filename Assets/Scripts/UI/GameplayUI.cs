@@ -73,6 +73,7 @@ public class GameplayUI : NetworkBehaviour
         }
         Instance = this;
 
+        //Setup UI Elements
         SetupSlider(leftComboSlider, 50, 0f);
         SetupSlider(leftHealthSlider, 100f, 100f);
         SetupSlider(rightComboSlider, 50, 0f);
@@ -88,6 +89,7 @@ public class GameplayUI : NetworkBehaviour
     {
         yield return null;
 
+        //Get connected players
         var networkPlayers = FindObjectsOfType<NetworkPlayer>();
 
         foreach (var player in networkPlayers)
@@ -100,8 +102,10 @@ public class GameplayUI : NetworkBehaviour
                 int side = GetPlayerSide(clientId);
                 bool isLocalPlayer = clientId == NetworkManager.Singleton.LocalClientId;
 
+                //Apply (YOU) prefix to the local player
                 string displayName = isLocalPlayer ? $"{baseName} (You)" : baseName;
 
+                //Set left/ right name texts
                 if (side == 0 && leftPlayerNameText)
                     leftPlayerNameText.text = displayName;
                 else if (side == 1 && rightPlayerNameText)
@@ -162,10 +166,11 @@ public class GameplayUI : NetworkBehaviour
         abilityText.text = "";
     }
 
-    ///<summary>Called from PlayerStats when values change</summary>
+    ///<summary>Called from PlayerStats when HEALTH/ COMBO/ COMBOVISUAL values change</summary>
     public void UpdatePlayer(ulong clientId, int currentCombo, float health)
     {
         int side = GetPlayerSide(clientId);
+        //Update correct side of UI
         Slider healthSlider = side == 0 ? leftHealthSlider : rightHealthSlider;
         Slider comboSlider = side == 0 ? leftComboSlider : rightComboSlider;
         Image fill = side == 0 ? leftComboFill : rightComboFill;
@@ -185,6 +190,7 @@ public class GameplayUI : NetworkBehaviour
 
             if (milestone != lastMilestone || (currentCombo < ComboAbilityManager.Instance.unlockPoint1 && lastMilestone >= ComboAbilityManager.Instance.unlockPoint1))
             {
+                //Set the combo bar UI colour based on our current milestone
                 Color targetFill = milestone switch
                 {
                     50 => purpleColor,
@@ -210,9 +216,9 @@ public class GameplayUI : NetworkBehaviour
     {
         if (!IsServer) return;
 
-        var playerStats = NetworkManager.Singleton.ConnectedClients[clientId]
-            .PlayerObject.GetComponent<PlayerStats>();
+        var playerStats = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.GetComponent<PlayerStats>();
 
+        //Reset the visual combo bar to 0 for affected player
         if (playerStats != null)
             playerStats.SetVisualComboServerRpc(0);
 
@@ -225,12 +231,14 @@ public class GameplayUI : NetworkBehaviour
         //Run only on the correct client
         if (NetworkManager.Singleton.LocalClientId != clientId) return;
 
+        //Pulse animation
         PulseComboOfPlayer(clientId, 0.2f);
         Debug.Log("CLIENT RESET COMBO BAR");
     }
 
     public void IncrementComboBar(ulong clientId)
     {
+        //Increase visual combo bar fill slider
         var playerStats = NetworkManager.Singleton.ConnectedClients[clientId].PlayerObject.GetComponent<PlayerStats>();
         if (playerStats != null)
             playerStats.IncrementVisualComboServerRpc();
@@ -241,6 +249,7 @@ public class GameplayUI : NetworkBehaviour
         if (!comboBarValues.ContainsKey(clientId))
             comboBarValues[clientId] = 0;
 
+        //Set correct value for passed in client
         comboBarValues[clientId] = visualComboValue;
 
         int side = GetPlayerSide(clientId);
@@ -268,9 +277,10 @@ public class GameplayUI : NetworkBehaviour
     public void OnPlayerFailed(ulong clientId)
     {
         int side = GetPlayerSide(clientId);
+        //Affect slider fill of the affected UI side
         Slider healthSlider = side == 0 ? leftHealthSlider : rightHealthSlider;
 
-        //Permanently disable health bar
+        //Permanently disable health bar on correct UI side
         healthSlider.gameObject.SetActive(false);
     }
 
@@ -284,10 +294,12 @@ public class GameplayUI : NetworkBehaviour
         Transform parent = side == 0 ? leftDamagePopupParent : rightDamagePopupParent;
         if (parent == null) return;
 
+        //Create the -dmgAmount text object
         GameObject popupObj = Instantiate(damageTextPrefab, parent);
         TextMeshProUGUI text = popupObj.GetComponent<TextMeshProUGUI>();
         if (text != null)
         {
+            //Set damage amount text to damage taken
             text.text = $"-{damageAmount:F0}";
             text.color = Color.red;
             StartCoroutine(AnimateDamagePopup(popupObj));
@@ -332,13 +344,16 @@ public class GameplayUI : NetworkBehaviour
         if (damageTextPrefab == null || healAmount <= 0f) return;
 
         int side = GetPlayerSide(clientId);
+        //Get health UI parent of side affected
         Transform parent = side == 0 ? leftDamagePopupParent : rightDamagePopupParent;
         if (parent == null) return;
 
+        //Create the -healAmount text object
         GameObject popupObj = Instantiate(damageTextPrefab, parent);
         TextMeshProUGUI text = popupObj.GetComponent<TextMeshProUGUI>();
         if (text != null)
         {
+            //Set heal amount text to heal applied
             text.text = $"+{healAmount:F0}";
             text.color = Color.green;
             StartCoroutine(AnimateHealPopup(popupObj));
@@ -383,6 +398,7 @@ public class GameplayUI : NetworkBehaviour
     {
         int side = GetPlayerSide(clientId);
 
+        //Get affected UI side
         Transform target = side == 0 ? leftComboParent : rightComboParent;
 
         TriggerComboPulse(target, duration);

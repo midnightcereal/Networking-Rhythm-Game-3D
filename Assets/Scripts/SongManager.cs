@@ -56,6 +56,7 @@ public class SongManager : MonoBehaviour
 
     private void Start()
     {
+        //Set the song to be loaded to the one host selected in the lobby scene
         SongSelectionManager.Instance?.ApplySelectedSongToGame();
         LoadSong();
 
@@ -74,12 +75,14 @@ public class SongManager : MonoBehaviour
         {
             cameraColourManager.epilepsySafeMode = PlayerPrefs.GetInt("EpilepsySafeMode", 0) == 1;
 
+            //Initialize the flashing colours from the song json
             cameraColourManager.Initialize(songData.availableColours,songData.bpm,songData.colourChangeBeats,audioSource);
         }
     }
 
     private void LoadSong()
     {
+        //Get song file
         TextAsset file = Resources.Load<TextAsset>($"Songs/{songJsonFile}");
         if (file == null)
         {
@@ -87,6 +90,7 @@ public class SongManager : MonoBehaviour
             return;
         }
 
+        //Get song data
         songData = JsonUtility.FromJson<SongData>(file.text);
 
         //Override editor values if JSON has them
@@ -97,6 +101,7 @@ public class SongManager : MonoBehaviour
 
         if (!string.IsNullOrEmpty(songData.audioFile))
         {
+            //Load audio file
             AudioClip clip = Resources.Load<AudioClip>($"Songs/{songData.audioFile}");
             if (clip) audioSource.clip = clip;
             else Debug.LogWarning($"Audio file '{songData.audioFile}' not found!");
@@ -116,7 +121,6 @@ public class SongManager : MonoBehaviour
         {
             //Spawn the note above the hit line so it starts falling immediately
             float spawnY = hitLine.position.y + preRollSeconds * speedMultiplier;
-
             Vector3 pos = new Vector3(laneXPositions[n.lane], spawnY, laneZ);
             GameObject noteObj = Instantiate(notePrefab, pos, Quaternion.identity);
             spawnedNotes.Add(noteObj);
@@ -128,7 +132,7 @@ public class SongManager : MonoBehaviour
                 noteScript.holdDuration = n.holdDuration;
                 noteScript.hitLine = hitLine;
 
-                //time logic for syncing
+                //Time logic for syncing
                 noteScript.time = (n.positionY * speedMultiplier);
                 noteScript.speedMultiplier = speedMultiplier;
             }
@@ -137,6 +141,7 @@ public class SongManager : MonoBehaviour
 
     private IEnumerator StartAudioWithDelay(float additionalDelay)
     {
+        //Wait for intro to finish and then play audio
         float totalDelay = Mathf.Abs(preRollSeconds) + additionalDelay;
         yield return new WaitForSeconds(totalDelay);
 
