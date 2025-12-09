@@ -15,6 +15,7 @@ public class LobbyUI : MonoBehaviour
     public Button joinButton;
     public Button leaveButton;
     public Button startGameButton;
+    public Button quitButton;
 
     private void Awake()
     {
@@ -27,6 +28,7 @@ public class LobbyUI : MonoBehaviour
         joinButton.onClick.AddListener(StartClient);
         leaveButton.onClick.AddListener(LobbyManager.Instance.LeaveLobby);
         startGameButton.onClick.AddListener(StartGame);
+        quitButton.onClick.AddListener(QuitGame);
 
         hostButton.gameObject.SetActive(true);
         joinButton.gameObject.SetActive(true);
@@ -91,5 +93,10 @@ public class LobbyUI : MonoBehaviour
         if (!NetworkManager.Singleton.IsHost) return;
 
         NetworkManager.Singleton.SceneManager.LoadScene("Game", LoadSceneMode.Single);
+    }
+
+    private void QuitGame()
+    {
+        Application.Quit();
     }
 }
