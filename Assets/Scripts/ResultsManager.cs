@@ -11,7 +11,10 @@ public class ResultsManager : NetworkBehaviour
     [Header("Results UI")]
     public GameObject resultsCanvas;
     public TextMeshProUGUI leftResultsText;
+    public TextMeshProUGUI leftWinnerText;
     public TextMeshProUGUI rightResultsText;
+    public TextMeshProUGUI rightWinnerText;
+    public TextMeshProUGUI tieText;
 
     private AudioSource songAudioSource;
     private SongManager songManager;
@@ -171,12 +174,51 @@ public class ResultsManager : NetworkBehaviour
         if (leftResultsText) leftResultsText.text = left;
         if (rightResultsText) rightResultsText.text = right;
 
+        //Determine winner and add winner text + confetti
+        int winnerSide = DetermineWinner();
+
         //Force background to black when results appear
         Camera cam = Camera.main;
         if (cam != null)
         {
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = Color.black;
+        }
+    }
+
+    private int DetermineWinner()
+    {
+        Debug.Log("Called determinewinner()");
+
+        if (!playerStats.ContainsKey(0) || !playerStats.ContainsKey(1))
+            return -1;
+
+        Debug.Log("Made it to winner");
+
+        var p0 = playerStats[0];
+        var p1 = playerStats[1];
+
+        //Score system
+        int score0 = (p0.perfects * 100) + (p0.hits * 10) + (p0.maxCombo * 5) - (p0.misses * 3);
+        int score1 = (p1.perfects * 100) + (p1.hits * 10) + (p1.maxCombo * 5) - (p1.misses * 3);
+
+        if (score0 > score1)
+        {
+            leftWinnerText.gameObject.SetActive(true);
+            Debug.Log("Left Winner");
+            return 0;
+        }
+        else if (score1 > score0)
+        {
+            rightWinnerText.gameObject.SetActive(true);
+            Debug.Log("Right Winner");
+            return 1;
+        }
+        else
+        {
+            tieText.gameObject.SetActive(true);
+            Debug.Log("no Winner");
+            return -1; //tie
         }
     }
 

@@ -10,6 +10,7 @@ public class InputManager : MonoBehaviour
 
     [Header("Lane References")]
     public Transform[] laneSpawnPoints;
+    public ParticleSystem[] laneHitParticles;
 
     [Header("Hit Settings")]
     public Transform hitLine;
@@ -108,6 +109,13 @@ public class InputManager : MonoBehaviour
         {
             //Successful note hit
             closest.Hit();
+
+            //Play Particle System for lane
+            if (laneHitParticles != null && lane < laneHitParticles.Length && laneHitParticles[lane] != null)
+            {
+                laneHitParticles[lane].Play();
+            }
+
             Debug.Log($"Hit lane {lane} ({(closest.isHold ? "Hold" : "Tap")})");
             return true;
         }
