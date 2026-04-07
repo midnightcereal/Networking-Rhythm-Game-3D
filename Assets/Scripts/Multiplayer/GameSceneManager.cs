@@ -18,12 +18,18 @@ public class GameSceneManager : NetworkBehaviour
     {
         Instance = this;
         NetworkManager.Singleton.SceneManager.OnLoadComplete += OnClientLoadedScene;
+
+        if (NetworkManager.Singleton != null)
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
     }
 
     private void OnDestroy()
     {
         if (NetworkManager.Singleton != null)
+        {
             NetworkManager.Singleton.SceneManager.OnLoadComplete -= OnClientLoadedScene;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
     }
 
     private void OnClientLoadedScene(ulong clientId, string sceneName, LoadSceneMode mode)
@@ -110,5 +116,69 @@ public class GameSceneManager : NetworkBehaviour
         {
             songManager.BeginSong(0f);
         }
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        //if (playersReady.Count < 2) return;
+
+        Debug.Log($"[GameSceneManager] Player {clientId} disconnected mid-game!");
+
+        bool isHostLeaving = (clientId == NetworkManager.Singleton.LocalClientId); // Only true on the host itself
+
+        int remainingSide;
+
+        if (IsHost)
+        {
+            //Host is still alive -> a client left
+            int disconnectedSide = GameplayUI.Instance.GetPlayerSide(clientId);
+            remainingSide = 1 - disconnectedSide;
+
+            EndGameDueToDisconnectClientRpc(remainingSide);
+        }
+        else
+        {
+            //This is the remaining CLIENT -> the HOST left
+            remainingSide = GameplayUI.Instance.GetPlayerSide(NetworkManager.Singleton.LocalClientId);
+
+            PerformGameEndDueToDisconnect(remainingSide);
+        }
+    }
+
+    [ClientRpc]
+    private void EndGameDueToDisconnectClientRpc(int winnerSide)
+    {
+        PerformGameEndDueToDisconnect(winnerSide);
+    }
+
+    private void PerformGameEndDueToDisconnect(int winnerSide)
+    {
+        Debug.Log($"[GameSceneManager] Ending game - Winner Side: {winnerSide}");
+
+        //Stop song
+        SongManager songManager = FindObjectOfType<SongManager>();
+        if (songManager?.audioSource != null)
+            songManager.audioSource.Stop();
+
+        //Destroy local rhythm track
+        if (localRhythmInstance != null)
+        {
+            var sm = localRhythmInstance.GetComponentInChildren<SongManager>();
+            sm.gameObject.SetActive(false);
+
+            var cm = localRhythmInstance.GetComponentInChildren<ComboManager>();
+            cm.gameObject.SetActive(false);
+
+            var noteTracks = GameObject.FindWithTag("NoteTracks");
+            noteTracks.SetActive(false);
+
+            //localRhythmInstance = null;
+        }
+
+        //Show correct forfeit results
+        if (ResultsManager.Instance != null)
+            ResultsManager.Instance.ShowForfeitResults(winnerSide);
+
+        Time.timeScale = 0f;
     }
 }

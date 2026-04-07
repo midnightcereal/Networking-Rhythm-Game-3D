@@ -45,6 +45,12 @@ public class LobbyUI : MonoBehaviour
         volumeSlider.value = savedVolume;
         AudioListener.volume = savedVolume;
         volumeSlider.onValueChanged.AddListener(OnVolumeChanged);
+
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        }
     }
 
     private void OnEpilepsyToggleChanged(bool value)
@@ -66,12 +72,13 @@ public class LobbyUI : MonoBehaviour
     {
         if (!NetworkManager.Singleton.StartHost()) return;
 
-        startGameButton.interactable = true;
         hostButton.gameObject.SetActive(false);
         joinButton.gameObject.SetActive(false);
         leaveButton.gameObject.SetActive(true);
         //Force host UI rebuild so "Host" appears immediately
         LobbyManager.Instance?.RebuildLobbyUI();
+
+        UpdateStartButton();
     }
 
     private void StartClient()
@@ -92,11 +99,47 @@ public class LobbyUI : MonoBehaviour
     {
         if (!NetworkManager.Singleton.IsHost) return;
 
+        int currentPlayers = FindObjectsOfType<NetworkPlayer>().Length;
+        if(currentPlayers != 2)
+        {
+            //startGameButton.interactable = false;
+            return;
+        }
+
+        //startGameButton.interactable = true;
         NetworkManager.Singleton.SceneManager.LoadScene("Game", LoadSceneMode.Single);
     }
 
     private void QuitGame()
     {
         Application.Quit();
+    }
+
+    private void OnDestroy()
+    {
+        if (NetworkManager.Singleton != null)
+        {
+            NetworkManager.Singleton.OnClientConnectedCallback -= OnClientConnected;
+            NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnected;
+        }
+    }
+
+    private void OnClientConnected(ulong clientId)
+    {
+        UpdateStartButton();
+    }
+
+    private void OnClientDisconnected(ulong clientId)
+    {
+        UpdateStartButton();
+    }
+
+    private void UpdateStartButton()
+    {
+        if (startGameButton == null) return;
+
+        int currentPlayers = FindObjectsOfType<NetworkPlayer>().Length;
+        bool canStart = NetworkManager.Singleton.IsHost && currentPlayers == 2;
+        startGameButton.interactable = canStart;
     }
 }

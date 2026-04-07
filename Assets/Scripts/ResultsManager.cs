@@ -34,6 +34,10 @@ public class ResultsManager : NetworkBehaviour
     public bool hasShownResults = false;
     public bool hasSongEnded = false;
 
+    [Header("FF Variables")]
+    private bool opponentDisconnected = false;
+    private int disconnectedWinnerSide = -1;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -79,14 +83,20 @@ public class ResultsManager : NetworkBehaviour
         if (IsHost && remaining <= 0.2f && !hasSubmitted)
         {
             hasSubmitted = true;
-            Debug.Log("[ResultsManager] HOST ENDED SONG — COLLECTING STATS AND SHOWING RESULTS");
-
-            //Host collects their own stats
-            int mySide = GameplayUI.Instance.GetPlayerSide(NetworkManager.Singleton.LocalClientId);
-            SubmitStatsLocally(mySide);
-
-            //Retrieve clients stats
-            AskClientsForStats();
+            if (opponentDisconnected)
+            {
+                Debug.Log("[ResultsManager] Opponent disconnected -> showing forfeit win after song ends");
+                BroadcastForfeitWinClientRpc(disconnectedWinnerSide);
+            }
+            else
+            {
+                Debug.Log("[ResultsManager] HOST ENDED SONG — COLLECTING STATS AND SHOWING RESULTS");
+                //Host collects their own stats
+                int mySide = GameplayUI.Instance.GetPlayerSide(NetworkManager.Singleton.LocalClientId);
+                SubmitStatsLocally(mySide);
+                //Retrieve clients stats
+                AskClientsForStats();
+            }
         }
     }
 
@@ -239,6 +249,61 @@ public class ResultsManager : NetworkBehaviour
             }
         }
         return "PLAYER";
+    }
+
+    [ClientRpc]
+    private void BroadcastForfeitWinClientRpc(int winnerSide)
+    {
+        ShowForfeitResults(winnerSide);
+    }
+
+    public void ShowForfeitResults(int winnerSide)
+    {
+        hasSubmitted = true; //prevent normal song end results
+
+        string winnerName = GetPlayerNameForSide(winnerSide);
+        string loserName = GetPlayerNameForSide(1 - winnerSide);
+
+        string winnerText = $"{winnerName}\nHits: {localHits}\nPerfect: {localPerfects}\nMisses: {localMisses}\nMax Combo: {localMaxCombo}";
+
+        string loserText = $"{loserName}\n(Disconnected)";
+
+        if (winnerSide == 0)
+        {
+            leftResultsText.text = winnerText;
+            rightResultsText.text = loserText;
+            leftWinnerText.gameObject.SetActive(true);
+            rightWinnerText.gameObject.SetActive(false);
+            tieText.gameObject.SetActive(false);
+        }
+        else
+        {
+            rightResultsText.text = winnerText;
+            leftResultsText.text = loserText;
+            rightWinnerText.gameObject.SetActive(true);
+            leftWinnerText.gameObject.SetActive(false);
+            tieText.gameObject.SetActive(false);
+        }
+
+        //Force black background
+        Camera cam = Camera.main;
+        if (cam != null)
+        {
+            cam.clearFlags = CameraClearFlags.SolidColor;
+            cam.backgroundColor = Color.black;
+        }
+
+        //Stop song if still playing
+        if (songAudioSource != null)
+            songAudioSource.Stop();
+
+        resultsCanvas.SetActive(true);
+    }
+
+    public void SetOpponentDisconnected(int winnerSide)
+    {
+        opponentDisconnected = true;
+        disconnectedWinnerSide = winnerSide;
     }
 
     public void RegisterHit(bool isPerfect)

@@ -85,6 +85,17 @@ public class GameplayUI : NetworkBehaviour
         StartCoroutine(ApplyPlayerNamesWhenReady());
     }
 
+    private void Start()
+    {
+        Debug.Log("AUTO LEAVE");
+        //Prevent LobbyManager from auto shutting down + loading the Lobby scene when the host leaves mid game
+        if (LobbyManager.Instance != null)
+        {
+            LobbyManager.Instance.enabled = false;
+            Debug.Log("[GameplayUI] Disabled LobbyManager auto leave logic");
+        }
+    }
+
     private IEnumerator ApplyPlayerNamesWhenReady()
     {
         yield return null;
