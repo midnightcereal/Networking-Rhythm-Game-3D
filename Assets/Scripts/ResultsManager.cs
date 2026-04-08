@@ -38,6 +38,10 @@ public class ResultsManager : NetworkBehaviour
     private bool opponentDisconnected = false;
     private int disconnectedWinnerSide = -1;
 
+    [Header("Coin Display")]
+    public TextMeshProUGUI leftCoinsText;
+    public TextMeshProUGUI rightCoinsText;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -187,6 +191,40 @@ public class ResultsManager : NetworkBehaviour
         //Determine winner and add winner text + confetti
         int winnerSide = DetermineWinner();
 
+        if (CoinManager.Instance != null)
+        {
+            bool leftIsWinner = winnerSide == 0;
+            bool rightIsWinner = winnerSide == 1;
+
+            (int hits0, int perfects0, int misses0, int maxCombo0) = playerStats.ContainsKey(0)
+                ? playerStats[0]
+                : (0, 0, 0, 0);
+
+            (int hits1, int perfects1, int misses1, int maxCombo1) = playerStats.ContainsKey(1)
+                ? playerStats[1]
+                : (0, 0, 0, 0);
+
+            int leftCoins = CoinManager.Instance.CalculateCoins(hits0, perfects0, misses0, maxCombo0, leftIsWinner);
+            int rightCoins = CoinManager.Instance.CalculateCoins(hits1, perfects1, misses1, maxCombo1, rightIsWinner);
+
+            leftCoinsText.gameObject.SetActive(true);
+            rightCoinsText.gameObject.SetActive(true);
+
+            if (leftCoinsText) leftCoinsText.text = $"+{leftCoins} coins";
+            if (rightCoinsText) rightCoinsText.text = $"+{rightCoins} coins";
+
+            //Award coins only to the local player
+            int mySide = GameplayUI.Instance.GetPlayerSide(NetworkManager.Singleton.LocalClientId);
+            var myStats = playerStats[mySide];
+            CoinManager.Instance.AwardEndOfGameCoins(
+                mySide,
+                winnerSide,
+                myStats.hits,
+                myStats.perfects,
+                myStats.misses,
+                myStats.maxCombo);
+        }
+
         //Force background to black when results appear
         Camera cam = Camera.main;
         if (cam != null)
@@ -298,6 +336,34 @@ public class ResultsManager : NetworkBehaviour
             songAudioSource.Stop();
 
         resultsCanvas.SetActive(true);
+
+        //Award coins to local player
+        if (CoinManager.Instance != null)
+        {
+            int mySide = GameplayUI.Instance.GetPlayerSide(NetworkManager.Singleton.LocalClientId);
+            bool iAmWinner = mySide == winnerSide;
+
+            int myCoins = CoinManager.Instance.CalculateCoins(localHits, localPerfects, localMisses, localMaxCombo, iAmWinner);
+
+            leftCoinsText.gameObject.SetActive(true);
+            rightCoinsText.gameObject.SetActive(true);
+
+            //Show coins on winner side only (loser gets 0)
+            if (winnerSide == 0)
+            {
+                if (leftCoinsText) leftCoinsText.text = $"+{myCoins} coins";
+                if (rightCoinsText) rightCoinsText.text = "+0 coins";
+            }
+            else
+            {
+                if (rightCoinsText) rightCoinsText.text = $"+{myCoins} coins";
+                if (leftCoinsText) leftCoinsText.text = "+0 coins";
+            }
+
+            //Award to local player
+            CoinManager.Instance.AwardEndOfGameCoins(mySide, winnerSide,
+                localHits, localPerfects, localMisses, localMaxCombo);
+        }
     }
 
     public void SetOpponentDisconnected(int winnerSide)

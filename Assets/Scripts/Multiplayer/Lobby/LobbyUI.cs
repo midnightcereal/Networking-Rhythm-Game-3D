@@ -1,8 +1,9 @@
-using UnityEngine;
-using UnityEngine.UI;
+using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
+using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class LobbyUI : MonoBehaviour
 {
@@ -16,6 +17,8 @@ public class LobbyUI : MonoBehaviour
     public Button leaveButton;
     public Button startGameButton;
     public Button quitButton;
+
+    public TextMeshProUGUI coinsText;
 
     private void Awake()
     {
@@ -50,6 +53,12 @@ public class LobbyUI : MonoBehaviour
         {
             NetworkManager.Singleton.OnClientConnectedCallback += OnClientConnected;
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
+        }
+
+        if (coinsText != null && CoinManager.Instance != null)
+        {
+            Debug.Log("Set coins text");
+            coinsText.text = $"Coins: {CoinManager.Instance.GetCurrentCoins()}";
         }
     }
 

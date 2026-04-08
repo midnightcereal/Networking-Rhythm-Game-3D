@@ -68,6 +68,8 @@ public class SongManager : MonoBehaviour
 
     public void BeginSong(float additionalDelay)
     {
+        CoinManager.Instance?.ResetForNewGame();
+
         SpawnAllNotes();
         StartCoroutine(StartAudioWithDelay(additionalDelay));
 
