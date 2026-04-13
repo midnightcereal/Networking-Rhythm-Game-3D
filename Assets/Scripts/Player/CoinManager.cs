@@ -81,6 +81,16 @@ public class CoinManager : MonoBehaviour
         return coins;
     }
 
+    public void SpendCoins(int amount)
+    {
+        if (currentCoins >= amount)
+        {
+            currentCoins -= amount;
+            SaveCoins();
+            Debug.Log($"[CoinManager] Spent {amount} coins. Remaining: {currentCoins}");
+        }
+    }
+
     //Get current coins for UI in lobby
     public int GetCurrentCoins() => currentCoins;
 }

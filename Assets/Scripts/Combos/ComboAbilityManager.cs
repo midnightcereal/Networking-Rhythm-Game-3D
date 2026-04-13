@@ -18,6 +18,12 @@ public class ComboAbilityManager : NetworkBehaviour
     public float screenBlurDuration = 2f;
     public float hitlineHideDuration = 2.5f;
 
+    [Header("Ability Settings - Base Values")]
+    public float baseRegenPerSecond = 6f;
+    public float baseRegenDuration = 5f;
+    public float baseScreenBlurDuration = 2f;
+    public float baseHitlineHideDuration = 2.5f;
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -86,16 +92,16 @@ public class ComboAbilityManager : NetworkBehaviour
         switch (milestone)
         {
             case 1: //Health regen self
-                uiAnimationDuration = regenDuration;
+                uiAnimationDuration = AbilityUpgradeManager.Instance.GetRegenDuration();
                 ApplyHealthRegenClientRpc(clientId, uiAnimationDuration);
                 break;
             case 2: //Screen blur opponent
-                uiAnimationDuration = screenBlurDuration;
+                uiAnimationDuration = AbilityUpgradeManager.Instance.GetScreenBlurDuration();
                 ulong opponentId = GetOpponentId(clientId);
                 ApplyScreenBlurClientRpc(opponentId, uiAnimationDuration);
                 break;
             case 3: //Hide hitline opponent
-                uiAnimationDuration = 5f;
+                uiAnimationDuration = AbilityUpgradeManager.Instance.GetHideHitlineDuration();
                 ulong opponent2Id = GetOpponentId(clientId);
                 ApplyHitlineHideClientRpc(opponent2Id, uiAnimationDuration);
                 break;
@@ -183,6 +189,7 @@ public class ComboAbilityManager : NetworkBehaviour
     {
         var stats = NetworkManager.Singleton.LocalClient.PlayerObject.GetComponent<PlayerStats>();
 
+        float regenPerSecond = AbilityUpgradeManager.Instance.GetRegenPerSecond();
         //Show initial regen popup for the total heal amount
         float totalRegenAmount = regenPerSecond * duration;
         GameplayUI.Instance?.ShowHealthRegenPopup(stats.OwnerClientId, totalRegenAmount);

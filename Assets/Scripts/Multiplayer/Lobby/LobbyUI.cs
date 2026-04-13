@@ -20,6 +20,13 @@ public class LobbyUI : MonoBehaviour
 
     public TextMeshProUGUI coinsText;
 
+    [Header("Upgrade Menu")]
+    public GameObject upgradeMenuPanel;
+    public Button openUpgradeButton;
+    public Button backButton;
+    public Button[] abilityUpgradeButtons = new Button[3]; //0=Regen, 1=Blur, 2=Hitline
+    public TextMeshProUGUI[] abilityDescriptionTexts = new TextMeshProUGUI[3];
+
     private void Awake()
     {
         Instance = this;
@@ -55,11 +62,27 @@ public class LobbyUI : MonoBehaviour
             NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnected;
         }
 
+        if (openUpgradeButton != null)
+            openUpgradeButton.onClick.AddListener(OpenUpgradeMenu);
+
+        if (backButton != null)
+            backButton.onClick.AddListener(CloseUpgradeMenu);
+
+        for (int i = 0; i < 3; i++)
+        {
+            int index = i; // capture for lambda
+            if (abilityUpgradeButtons[i] != null)
+                abilityUpgradeButtons[i].onClick.AddListener(() => UpgradeAbility(index));
+        }
+
         if (coinsText != null && CoinManager.Instance != null)
         {
             Debug.Log("Set coins text");
             coinsText.text = $"Coins: {CoinManager.Instance.GetCurrentCoins()}";
         }
+
+        if (upgradeMenuPanel != null)
+            upgradeMenuPanel.SetActive(false);
     }
 
     private void OnEpilepsyToggleChanged(bool value)
@@ -88,6 +111,9 @@ public class LobbyUI : MonoBehaviour
         LobbyManager.Instance?.RebuildLobbyUI();
 
         UpdateStartButton();
+
+        //Hide upgrade button when entering MP lobby
+        LobbyManager.Instance?.EnterMultiplayerLobby();
     }
 
     private void StartClient()
@@ -102,6 +128,9 @@ public class LobbyUI : MonoBehaviour
         joinButton.gameObject.SetActive(false);
         leaveButton.gameObject.SetActive(true);
         startGameButton.gameObject.SetActive(false);
+
+        //Hide upgrade button when entering MP lobby
+        LobbyManager.Instance?.EnterMultiplayerLobby();
     }
 
     private void StartGame()
@@ -150,5 +179,77 @@ public class LobbyUI : MonoBehaviour
         int currentPlayers = FindObjectsOfType<NetworkPlayer>().Length;
         bool canStart = NetworkManager.Singleton.IsHost && currentPlayers == 2;
         startGameButton.interactable = canStart;
+    }
+
+    //UPGRADE MENU
+    public void OpenUpgradeMenu()
+    {
+        if (upgradeMenuPanel == null) return;
+
+        //Hide main lobby UI
+        hostButton.gameObject.SetActive(false);
+        joinButton.gameObject.SetActive(false);
+        leaveButton.gameObject.SetActive(false);
+        startGameButton.gameObject.SetActive(false);
+        quitButton.gameObject.SetActive(false);
+        if (epilepsyToggle != null) epilepsyToggle.gameObject.SetActive(false);
+        if (volumeSlider != null) volumeSlider.gameObject.SetActive(false);
+
+        upgradeMenuPanel.SetActive(true);
+        RefreshUpgradeUI();
+    }
+
+    public void CloseUpgradeMenu()
+    {
+        if (upgradeMenuPanel == null) return;
+
+        upgradeMenuPanel.SetActive(false);
+
+        //Show main lobby UI again
+        hostButton.gameObject.SetActive(true);
+        joinButton.gameObject.SetActive(true);
+        leaveButton.gameObject.SetActive(NetworkManager.Singleton != null && NetworkManager.Singleton.IsConnectedClient);
+        startGameButton.gameObject.SetActive(true);
+        quitButton.gameObject.SetActive(true);
+        if (epilepsyToggle != null) epilepsyToggle.gameObject.SetActive(true);
+        if (volumeSlider != null) volumeSlider.gameObject.SetActive(true);
+
+        //Update coins in case they were spent
+        if (coinsText != null && CoinManager.Instance != null)
+            coinsText.text = $"Coins: {CoinManager.Instance.GetCurrentCoins()}";
+    }
+
+    public void SetUpgradeButtonActive(bool active)
+    {
+        if (openUpgradeButton != null)
+            openUpgradeButton.gameObject.SetActive(active);
+    }
+
+    private void RefreshUpgradeUI()
+    {
+        if (AbilityUpgradeManager.Instance == null) return;
+
+        for (int i = 0; i < 3; i++)
+        {
+            //Update description text
+            if (abilityDescriptionTexts[i] != null)
+                abilityDescriptionTexts[i].text = AbilityUpgradeManager.Instance.GetUpgradeDescription(i);
+
+            //Enable/disable button
+            if (abilityUpgradeButtons[i] != null)
+                abilityUpgradeButtons[i].interactable = AbilityUpgradeManager.Instance.CanUpgrade(i);
+        }
+
+        //Update coins display
+        if (coinsText != null && CoinManager.Instance != null)
+            coinsText.text = $"Coins: {CoinManager.Instance.GetCurrentCoins()}";
+    }
+
+    private void UpgradeAbility(int index)
+    {
+        if (AbilityUpgradeManager.Instance == null) return;
+
+        AbilityUpgradeManager.Instance.UpgradeAbility(index);
+        RefreshUpgradeUI();
     }
 }

@@ -180,6 +180,8 @@ public class LobbyManager : MonoBehaviour
 
         playerCountText.text = "";
 
+        LobbyUI.Instance?.SetUpgradeButtonActive(true);
+
         if (NetworkManager.Singleton.IsHost)
         {
             //Host shuts down server -> clients detect 0 players
@@ -194,5 +196,13 @@ public class LobbyManager : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Lobby Entry (called from LobbyUI)
+    public void EnterMultiplayerLobby()
+    {
+        //Hide upgrade button when joining a MP lobby
+        LobbyUI.Instance?.SetUpgradeButtonActive(false);
+    }
     #endregion
 }
