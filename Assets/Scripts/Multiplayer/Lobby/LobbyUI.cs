@@ -193,7 +193,7 @@ public class LobbyUI : MonoBehaviour
         startGameButton.gameObject.SetActive(false);
         quitButton.gameObject.SetActive(false);
         if (epilepsyToggle != null) epilepsyToggle.gameObject.SetActive(false);
-        if (volumeSlider != null) volumeSlider.gameObject.SetActive(false);
+        //if (volumeSlider != null) volumeSlider.gameObject.SetActive(false);
 
         upgradeMenuPanel.SetActive(true);
         RefreshUpgradeUI();
@@ -212,7 +212,7 @@ public class LobbyUI : MonoBehaviour
         startGameButton.gameObject.SetActive(true);
         quitButton.gameObject.SetActive(true);
         if (epilepsyToggle != null) epilepsyToggle.gameObject.SetActive(true);
-        if (volumeSlider != null) volumeSlider.gameObject.SetActive(true);
+        //if (volumeSlider != null) volumeSlider.gameObject.SetActive(true);
 
         //Update coins in case they were spent
         if (coinsText != null && CoinManager.Instance != null)

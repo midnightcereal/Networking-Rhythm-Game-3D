@@ -37,6 +37,11 @@ public class AbilityUpgradeManager : MonoBehaviour
         healthRegenLevel = PlayerPrefs.GetInt(KEY_REGEN, 0);
         screenBlurLevel = PlayerPrefs.GetInt(KEY_BLUR, 0);
         hideHitlineLevel = PlayerPrefs.GetInt(KEY_HITLINE, 0);
+
+        //Reset values
+        //healthRegenLevel = 0;
+        //screenBlurLevel = 0;
+        //hideHitlineLevel = 0;
     }
 
     private void SaveUpgrades()
