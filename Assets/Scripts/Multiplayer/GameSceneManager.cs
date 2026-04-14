@@ -101,6 +101,10 @@ public class GameSceneManager : NetworkBehaviour
         //Retrieve song info
         var songData = songManager.GetSongData();
 
+
+        if (MissEffect.Instance != null)
+            MissEffect.Instance.ResetGameOverState();
+
         if (introUI != null && songData != null)
         {
             //Start the song intro sequence - display artist/ difficulty then countdown

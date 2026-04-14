@@ -15,7 +15,7 @@ public class MissEffect : MonoBehaviour
 
     private Coroutine flashRoutine;
     private bool isGameOver = false;
-
+    public bool IsGameOver => isGameOver;
 
     private void Awake()
     {
@@ -86,9 +86,24 @@ public class MissEffect : MonoBehaviour
         imageOverlay.color = Color.clear;
     }
 
+    ///<summary>Called when results screen appears so the game over canvas disappears</summary>
+    public void HideGameOver()
+    {
+        isGameOver = false;
+
+        if (imageOverlay != null)
+            imageOverlay.color = Color.clear;
+
+        if (gameOverText != null)
+            gameOverText.enabled = false;
+
+        Debug.Log("[MissEffect] Game Over overlay hidden for results screen");
+    }
+
     public void ResetGameOverState()
     {
         isGameOver = false;
-        imageOverlay.color = Color.clear;
+        if (imageOverlay != null) imageOverlay.color = Color.clear;
+        gameOverText.enabled = false;
     }
 }

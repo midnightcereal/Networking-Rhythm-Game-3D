@@ -174,6 +174,10 @@ public class ResultsManager : NetworkBehaviour
         yield return new WaitForSeconds(1.5f);
         resultsCanvas.SetActive(true);
 
+        //Hide game over canvas
+        if (MissEffect.Instance != null)
+            MissEffect.Instance.HideGameOver();
+
         string leftName = GetPlayerNameForSide(0);
         string rightName = GetPlayerNameForSide(1);
 
@@ -337,6 +341,10 @@ public class ResultsManager : NetworkBehaviour
 
         resultsCanvas.SetActive(true);
 
+        //Hide game over canvas
+        if (MissEffect.Instance != null)
+            MissEffect.Instance.HideGameOver();
+
         //Award coins to local player
         if (CoinManager.Instance != null)
         {
@@ -374,6 +382,13 @@ public class ResultsManager : NetworkBehaviour
 
     public void RegisterHit(bool isPerfect)
     {
+        //If player's game is over count the hit as a miss instead
+        if (MissEffect.Instance != null && MissEffect.Instance.IsGameOver)
+        {
+            RegisterMiss();
+            return;
+        }
+
         localHits++;
         if (isPerfect) localPerfects++;
         currentCombo++;
