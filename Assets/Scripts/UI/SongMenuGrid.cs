@@ -27,9 +27,9 @@ public class SongMenuGrid : MonoBehaviour
 
     [Header("Grid Settings")]
     public Vector2 gridSize = new Vector2(2, 2);      //2x2 grid
-    public Vector2 cellSize = new Vector2(300, 160);  //Button size
+    public Vector2 cellSize = new Vector2(200, 100);  //Button size
     public Vector2 spacing = new Vector2(40, 40);     //Gap between buttons
-    public Vector2 startOffset = new Vector2(340, 0);
+    public Vector2 startOffset = new Vector2(0, 0);
 
     public AudioSource previewAudioSource;
     public List<SongInfo> songs = new List<SongInfo>();

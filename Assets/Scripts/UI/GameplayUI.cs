@@ -273,7 +273,6 @@ public class GameplayUI : NetworkBehaviour
             SetLocalAbilityReadyText(visualComboValue);
     }
 
-
     public int GetPlayerSide(ulong clientId)
     {
         if (!playerSide.ContainsKey(clientId))
