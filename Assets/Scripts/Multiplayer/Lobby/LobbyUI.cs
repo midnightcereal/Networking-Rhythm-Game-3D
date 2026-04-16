@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using TMPro;
 using Unity.Netcode;
 using Unity.Netcode.Transports.UTP;
@@ -27,6 +28,15 @@ public class LobbyUI : MonoBehaviour
     public Button[] abilityUpgradeButtons = new Button[3]; //0=Regen, 1=Blur, 2=Hitline
     public TextMeshProUGUI[] abilityDescriptionTexts = new TextMeshProUGUI[3];
 
+    [Header("Player Name Input")]
+    public TMP_InputField playerNameInput;
+    private const string PLAYER_NAME_KEY = "PlayerCustomName";
+
+    [Header("Fullscreen Button")]
+    public Toggle fullscreenToggle;
+    //public TextMeshProUGUI fullscreenToggleText;
+    private const string FULLSCREEN_KEY = "FullscreenEnabled";
+
     private void Awake()
     {
         Instance = this;
@@ -49,6 +59,17 @@ public class LobbyUI : MonoBehaviour
         bool savedValue = PlayerPrefs.GetInt("EpilepsySafeMode", 0) == 1;
         epilepsyToggle.isOn = savedValue;
         epilepsyToggle.onValueChanged.AddListener(OnEpilepsyToggleChanged);
+
+        //Load saved fullscreen mode
+        if (fullscreenToggle != null)
+        {
+            //Load saved preference (default = true / fullscreen)
+            bool savedFullscreen = PlayerPrefs.GetInt(FULLSCREEN_KEY, 1) == 1;
+            Screen.fullScreen = savedFullscreen;
+            fullscreenToggle.isOn = savedFullscreen;
+
+            fullscreenToggle.onValueChanged.AddListener(OnFullscreenToggleChanged);
+        }
 
         //Load saved volume
         float savedVolume = PlayerPrefs.GetFloat("MasterVolume", 1f);
@@ -83,12 +104,51 @@ public class LobbyUI : MonoBehaviour
 
         if (upgradeMenuPanel != null)
             upgradeMenuPanel.SetActive(false);
+
+        //Load and setup player name input
+        string savedName = PlayerPrefs.GetString(PLAYER_NAME_KEY, "Player");
+        if (playerNameInput != null)
+        {
+            playerNameInput.text = savedName;
+            playerNameInput.onValueChanged.AddListener(OnPlayerNameChanged);
+        }
+    }
+
+    private void OnPlayerNameChanged(string newName)
+    {
+        //Save
+        PlayerPrefs.SetString(PLAYER_NAME_KEY, newName);
+        PlayerPrefs.Save();
+
+        //Update the local NetworkPlayer
+        if (NetworkPlayer.LocalPlayerInstance != null)
+        {
+            NetworkPlayer.LocalPlayerInstance.SetDisplayName(newName);
+        }
+    }
+
+    public string GetCurrentPlayerName()
+    {
+        if (playerNameInput != null && !string.IsNullOrWhiteSpace(playerNameInput.text))
+            return playerNameInput.text.Trim();
+
+        return PlayerPrefs.GetString(PLAYER_NAME_KEY, "Player");
     }
 
     private void OnEpilepsyToggleChanged(bool value)
     {
         PlayerPrefs.SetInt("EpilepsySafeMode", value ? 1 : 0);
         PlayerPrefs.Save();
+    }
+
+    private void OnFullscreenToggleChanged(bool isFullscreen)
+    {
+        Screen.fullScreen = isFullscreen;
+
+        PlayerPrefs.SetInt(FULLSCREEN_KEY, isFullscreen ? 1 : 0);
+        PlayerPrefs.Save();
+
+        //UpdateFullscreenToggleText();
     }
 
     private void OnVolumeChanged(float value)

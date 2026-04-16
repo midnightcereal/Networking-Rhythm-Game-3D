@@ -276,21 +276,39 @@ public class ResultsManager : NetworkBehaviour
 
     private string GetPlayerNameForSide(int side)
     {
-        if (GameplayUI.Instance == null) return "PLAYER";
+        if (GameplayUI.Instance == null)
+            return "Player";
 
+        //Find which clientId is on this side
+        ulong clientId = 0;
         foreach (var kvp in GameplayUI.Instance.playerSide)
         {
             if (kvp.Value == side)
             {
-                string baseName = "PLAYER";
-                if (GameplayUI.Instance.basePlayerNames.TryGetValue(kvp.Key, out string name))
-                    baseName = name;
-
-                bool isLocal = kvp.Key == NetworkManager.Singleton.LocalClientId;
-                return isLocal ? $"{baseName} (You)" : baseName;
+                clientId = kvp.Key;
+                break;
             }
         }
-        return "PLAYER";
+
+        if (clientId == 0)
+            return "Player";
+
+        //Find the NetworkPlayer and read its DisplayName
+        NetworkPlayer[] players = FindObjectsOfType<NetworkPlayer>();
+        foreach (var player in players)
+        {
+            if (player.OwnerClientId == clientId)
+            {
+                string name = player.DisplayName.Value.ToString();
+                if (string.IsNullOrWhiteSpace(name))
+                    name = "Player";
+
+                bool isLocal = clientId == NetworkManager.Singleton.LocalClientId;
+                return isLocal ? $"{name} (You)" : name;
+            }
+        }
+
+        return "Player";
     }
 
     [ClientRpc]

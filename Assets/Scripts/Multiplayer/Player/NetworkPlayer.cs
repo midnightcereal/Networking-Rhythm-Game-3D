@@ -10,13 +10,22 @@ public class NetworkPlayer : NetworkBehaviour
         NetworkVariableWritePermission.Owner
     );
 
+    public static NetworkPlayer LocalPlayerInstance { get; private set; }
+
     public override void OnNetworkSpawn()
     {
         //Only the owner sets their display name
         if (IsOwner)
         {
-            string name = IsHost ? "Host" : "Client";
-            DisplayName.Value = new FixedString128Bytes(name);
+            LocalPlayerInstance = this;
+
+            //Load name from LobbyUI or PlayerPrefs
+            string customName = LobbyUI.Instance != null ? LobbyUI.Instance.GetCurrentPlayerName() : (IsHost ? "Host" : "Client");
+
+            if (string.IsNullOrWhiteSpace(customName))
+                customName = IsHost ? "Host" : "Client";
+
+            DisplayName.Value = new FixedString128Bytes(customName);
         }
 
         //Subscribe to changes so UI updates automatically
@@ -27,17 +36,26 @@ public class NetworkPlayer : NetworkBehaviour
 
         //Add this player to the lobby manager list
         LobbyManager.Instance?.PlayerSpawned(this);
-
         //Update UI immediately
         LobbyManager.Instance?.RebuildLobbyUI();
     }
 
     public override void OnNetworkDespawn()
     {
+        if (IsOwner)
+            LocalPlayerInstance = null;
+
         //Remove this player from the lobby manager list
         LobbyManager.Instance?.PlayerDespawned(this);
-
         //Update UI
         LobbyManager.Instance?.RebuildLobbyUI();
+    }
+
+    public void SetDisplayName(string newName)
+    {
+        if (IsOwner && !string.IsNullOrWhiteSpace(newName))
+        {
+            DisplayName.Value = new FixedString128Bytes(newName);
+        }
     }
 }
